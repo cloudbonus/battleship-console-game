@@ -65,11 +65,12 @@ public class BattleshipGameServerEndpoint {
 
     private void handleNameMessage(String message, Session session) throws IOException {
         opponentName = message.substring(5);
-        session.getBasicRemote().sendText("NAME_" + user.getName());
+        ConsoleInformationManager.clearConsole();
         String info = ConsoleInformationManager.printGameInfo(user, opponentName);
         System.out.println(info);
         System.out.println("Game info:");
         System.out.printf("%s's turn\n", opponentName);
+        session.getBasicRemote().sendText("NAME_" + user.getName());
     }
 
     private void handleLostMessage(Session session) {
@@ -84,6 +85,7 @@ public class BattleshipGameServerEndpoint {
 
     private void handleAttackMessage(String message, Session session) throws IOException {
         Cell cell = user.giveResponse(ConsoleInformationManager.createCellFromInput(message));
+        ConsoleInformationManager.clearConsole();
         ConsoleInformationManager.printGameInfo(user, opponentName);
         System.out.println("Game info:");
         System.out.printf("%s's turn\n", opponentName);
@@ -113,6 +115,7 @@ public class BattleshipGameServerEndpoint {
         } else {
             handleNonShipMessage(message);
         }
+        ConsoleInformationManager.clearConsole();
         String info = ConsoleInformationManager.printGameInfo(user, opponentName);
         System.out.println(info);
         System.out.println("Game info:");
@@ -167,6 +170,7 @@ public class BattleshipGameServerEndpoint {
     }
 
     private void handleDefaultMessage(String message, Session session) throws IOException {
+        ConsoleInformationManager.clearConsole();
         String info = ConsoleInformationManager.printGameInfo(user, opponentName);
         System.out.println(info);
         System.out.println("Game info:");

@@ -9,22 +9,22 @@ import java.util.List;
 
 public class ConsoleInformationManager {
 
-public static void printHeader() {
-    clearConsole();
-    String text = "BATTLESHIP GAME";
-    int totalLength = 109; // Length of the '#' line
-    int padding = (totalLength - text.length()) / 2; // Calculate padding
+    public static void printHeader() {
+        clearConsole();
+        String text = "BATTLESHIP GAME";
+        int totalLength = 109;
+        int padding = (totalLength - text.length()) / 2;
 
-    String header = """
-        ###########################################################################################################
-        
-        %s%s%s
-        
-        ###########################################################################################################
-        """.formatted(" ".repeat(padding), text, " ".repeat(padding));
+        String header = """
+                ###########################################################################################################
+                        
+                %s%s%s
+                        
+                ###########################################################################################################
+                """.formatted(" ".repeat(padding), text, " ".repeat(padding));
 
-    System.out.println(header);
-}
+        System.out.println(header);
+    }
 
     public static void printGameModeMenu() {
         String mes = """
@@ -70,7 +70,7 @@ public static void printHeader() {
         System.out.println("Please input the position (use only A-P for letters and 1-16 for numbers, e.g., A13):");
     }
 
-    public static void printRemainingShips(CompleteBoard firstBoard, BasicBoard secondBoard)  {
+    public static void printRemainingShips(CompleteBoard firstBoard, BasicBoard secondBoard) {
         String firstPlayerCount = String.format("   Remaining ships: %d", firstBoard.getRemainingShipsCount());
         String secondPlayerCount = String.format("   Remaining ships: %d", secondBoard.getRemainingShipsCount());
         System.out.printf("%-35s   %s%n", firstPlayerCount, secondPlayerCount);
@@ -158,16 +158,16 @@ public static void printHeader() {
         StringBuilder sb = new StringBuilder();
 
         String text = "BATTLESHIP GAME";
-        int totalLength = 109; // Length of the '#' line
-        int padding = (totalLength - text.length()) / 2; // Calculate padding
+        int totalLength = 109;
+        int padding = (totalLength - text.length()) / 2;
 
         String header = """
-        ###########################################################################################################
-        
-        %s%s%s
-        
-        ###########################################################################################################
-        """.formatted(" ".repeat(padding), text, " ".repeat(padding));
+                ###########################################################################################################
+                        
+                %s%s%s
+                        
+                ###########################################################################################################
+                """.formatted(" ".repeat(padding), text, " ".repeat(padding));
 
         sb.append(header);
 
