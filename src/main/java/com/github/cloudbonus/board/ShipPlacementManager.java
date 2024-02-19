@@ -43,10 +43,10 @@ public class ShipPlacementManager {
     }
 
     private void placeShipsManually() {
-        ConsoleInformationManager.printMap(this.board);
+        System.out.println(this.board.getState());
         for (int shipSize : SHIP_SIZES) {
             placeShipManually(shipSize);
-            ConsoleInformationManager.printMap(this.board);
+            System.out.println(this.board.getState());
         }
     }
 

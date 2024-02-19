@@ -173,8 +173,9 @@ public class BattleshipGameClientEndpoint
         try {
             String args = String.format("ws://localhost:%s/websockets/game", port);
             BattleshipGameClientEndpoint.setUser(user);
-            client.connectToServer(BattleshipGameClientEndpoint.class, new URI(args));
-            latch.await();
+            try (Session ignored = client.connectToServer(BattleshipGameClientEndpoint.class, new URI(args))) {
+                latch.await();
+            }
 
         } catch (DeploymentException | URISyntaxException | InterruptedException | IOException e) {
             System.err.println("Failed to connect to the server: " + e.getMessage());

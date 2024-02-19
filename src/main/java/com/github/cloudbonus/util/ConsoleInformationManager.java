@@ -81,10 +81,6 @@ public class ConsoleInformationManager {
         System.out.println();
     }
 
-    public static void printMap(Board board) {
-        System.out.println(board.getState());
-    }
-
     public static void printBoardNames(String firstPlayer, String secondPlayer) {
         String firstPlayerName = "   " + firstPlayer;
         String secondPlayerName = "   " + secondPlayer;
