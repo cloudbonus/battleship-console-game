@@ -8,7 +8,7 @@
     <artifactId>senla-project</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>taco-cloud</name>
+    <name>Battleship Game</name>
     <description>Senla test assignment</description>
 
     <properties>
