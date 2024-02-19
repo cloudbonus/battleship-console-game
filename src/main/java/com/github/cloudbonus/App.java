@@ -1,28 +1,36 @@
 package com.github.cloudbonus;
 
-import com.github.cloudbonus.board.BasicBoard;
-import com.github.cloudbonus.board.CompleteBoard;
-import com.github.cloudbonus.game.Game;
-import com.github.cloudbonus.user.HumanPlayer;
-import com.github.cloudbonus.user.User;
-import com.github.cloudbonus.util.ConsoleInformationManager;
-import com.github.cloudbonus.util.UserInteractionManager;
+import com.github.cloudbonus.stateMachine.*;
+import com.github.cloudbonus.states.*;
 
 public class App
 {
+    private static StateMachine stateMachine;
+
     public static void main( String[] args ) {
-        ConsoleInformationManager.printHeader();
-        String userName = UserInteractionManager.getInputNameFromUser();
-        User user = new HumanPlayer();
-        user.setName(userName);
+        createAndSetupStateMachine();
+        enterPrepareGameState();
+    }
 
-        CompleteBoard leftBoard = new CompleteBoard();
-        BasicBoard rightBoard = new BasicBoard();
-        user.setLeftBoard(leftBoard);
-        user.setRightBoard(rightBoard);
+    private static void createAndSetupStateMachine(){
+        stateMachine = new StateMachine();
 
-        Game game = new Game();
-        game.setFirstUser(user);
-        game.setupGame();
+        PrepareGameState prepareGameState = new PrepareGameState(stateMachine);
+        GameModeSelectionState gameModeSelectionState = new GameModeSelectionState(stateMachine);
+        PrepareBoardModeState prepareBoardModeState = new PrepareBoardModeState(stateMachine);
+        StartMultiplayerModeState startMultiplayerModeState = new StartMultiplayerModeState(stateMachine);
+        GameLoopState gameLoopState = new GameLoopState(stateMachine);
+        GameOverState gameOverState = new GameOverState(stateMachine);
+
+        stateMachine.addState(prepareGameState);
+        stateMachine.addState(gameModeSelectionState);
+        stateMachine.addState(prepareBoardModeState);
+        stateMachine.addState(startMultiplayerModeState);
+        stateMachine.addState(gameLoopState);
+        stateMachine.addState(gameOverState);
+    }
+
+    private static void enterPrepareGameState(){
+        stateMachine.changeState(PrepareGameState.class);
     }
 }
