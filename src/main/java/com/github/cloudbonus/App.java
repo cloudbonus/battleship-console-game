@@ -12,6 +12,8 @@ public class App
         enterPrepareGameState();
     }
 
+
+
     private static void createAndSetupStateMachine(){
         stateMachine = new StateMachine();
 

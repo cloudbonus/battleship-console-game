@@ -3,10 +3,7 @@ package com.github.cloudbonus.board;
 import com.github.cloudbonus.util.ConsoleInformationManager;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.github.cloudbonus.board.CellState.EMPTY;
@@ -54,6 +51,25 @@ public class BasicBoard extends Board{
     public boolean hasAttacked(String position) {
         Cell cell = ConsoleInformationManager.createCellFromInput(position);
         return super.getPosition(cell.getX(), cell.getY()).getCellState() != EMPTY;
+    }
+
+    public String getRemainingShips() {
+        List<Integer> remainingShipSizes = new ArrayList<>(Arrays.asList(1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6));
+        Map<Integer, Integer> countMap = new HashMap<>();
+        StringBuilder sb = new StringBuilder();
+
+        for (Integer size : remainingShipSizes) {
+            countMap.put(size, countMap.getOrDefault(size, 0) + 1);
+        }
+        sb.append("Remaining Opponent's Ships\n");
+        sb.append("───────────────────────────────\n");
+        for (int i = 1; i <= 6; i++) {
+            String shipIcon = countMap.containsKey(i) ? "☐" : "☒";
+            String shipCount = countMap.containsKey(i) ? String.valueOf(countMap.get(i)) : "No";
+            sb.append(String.format("%-6s - %s remaining%n", shipIcon.repeat(i), shipCount));
+        }
+
+        return sb.toString();
     }
 
     public void updateShipsOnBoard(int ship) {

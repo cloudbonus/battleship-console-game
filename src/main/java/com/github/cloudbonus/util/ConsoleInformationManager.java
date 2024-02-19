@@ -8,19 +8,23 @@ import java.util.List;
 
 
 public class ConsoleInformationManager {
-    public static void printHeader() {
-        clearConsole();
-        String header = """
-                                            
-                ########################################################################
-                                            
-                                            BATTLESHIP GAME                             
-                                            
-                ########################################################################                            
 
-                """;
-        System.out.println(header);
-    }
+public static void printHeader() {
+    clearConsole();
+    String text = "BATTLESHIP GAME";
+    int totalLength = 109; // Length of the '#' line
+    int padding = (totalLength - text.length()) / 2; // Calculate padding
+
+    String header = """
+        ###########################################################################################################
+        
+        %s%s%s
+        
+        ###########################################################################################################
+        """.formatted(" ".repeat(padding), text, " ".repeat(padding));
+
+    System.out.println(header);
+}
 
     public static void printGameModeMenu() {
         String mes = """
@@ -75,8 +79,15 @@ public class ConsoleInformationManager {
     public static void printMap(User player) {
         String[] board1 = player.getLeftBoard().getState().split("\n");
         String[] board2 = player.getRightBoard().getState().split("\n");
+        String[] remainingShips = player.getRightBoard().getRemainingShips().split("\n");
+
+
         for (int i = 0; i < board1.length; i++) {
-            System.out.printf("%-35s   %s%n", board1[i], board2[i]);
+            if (i < remainingShips.length) {
+                System.out.printf("%-35s   %-35s   %s%n", board1[i], board2[i], remainingShips[i]);
+            } else {
+                System.out.printf("%-35s   %s%n", board1[i], board2[i]);
+            }
         }
         System.out.println();
     }
@@ -112,17 +123,20 @@ public class ConsoleInformationManager {
     }
 
     public static Cell createCellFromInput(String input) {
-        var y = input.charAt(0) - 'A';
-        String numberStr = input.substring(1);
-        var x = Integer.parseInt(numberStr) - 1;
-        return new Cell(x, y, CellState.SHOT);
+        var coordinates = getCoordinatesFromInput(input);
+        return new Cell(coordinates[0], coordinates[1], CellState.SHOT);
     }
 
     public static Cell recreateCellFromInput(String input) {
+        var coordinates = getCoordinatesFromInput(input);
+        return new Cell(coordinates[0], coordinates[1], CellState.DESTROYED);
+    }
+
+    private static int[] getCoordinatesFromInput(String input) {
         var y = input.charAt(0) - 'A';
         String numberStr = input.substring(1);
         var x = Integer.parseInt(numberStr) - 1;
-        return new Cell(x, y, CellState.DESTROYED);
+        return new int[]{x, y};
     }
 
     public static List<Cell> generateSequence(String start, String end) {
@@ -142,15 +156,19 @@ public class ConsoleInformationManager {
 
     public static String printGameInfo(User user, String opponentName) {
         StringBuilder sb = new StringBuilder();
-        String header = """
-                                            
-                ########################################################################
-                                            
-                                            BATTLESHIP GAME                             
-                                            
-                ########################################################################                            
 
-                """;
+        String text = "BATTLESHIP GAME";
+        int totalLength = 109; // Length of the '#' line
+        int padding = (totalLength - text.length()) / 2; // Calculate padding
+
+        String header = """
+        ###########################################################################################################
+        
+        %s%s%s
+        
+        ###########################################################################################################
+        """.formatted(" ".repeat(padding), text, " ".repeat(padding));
+
         sb.append(header);
 
         String firstPlayerName = "   " + user.getName();
@@ -160,13 +178,20 @@ public class ConsoleInformationManager {
 
         String firstPlayerCount = String.format("   Remaining ships: %d", user.getLeftBoard().getRemainingShipsCount());
         String secondPlayerCount = String.format("   Remaining ships: %d", user.getRightBoard().getRemainingShipsCount());
-        String remainingShips = String.format("%-35s   %s%n", firstPlayerCount, secondPlayerCount);
-        sb.append(remainingShips);
+        String remainingShipsCount = String.format("%-35s   %s%n", firstPlayerCount, secondPlayerCount);
+        sb.append(remainingShipsCount);
 
         String[] board1 = user.getLeftBoard().getState().split("\n");
         String[] board2 = user.getRightBoard().getState().split("\n");
+        String[] remainingShips = user.getRightBoard().getRemainingShips().split("\n");
+
+
         for (int i = 0; i < board1.length; i++) {
-            sb.append(String.format("%-35s   %s\n", board1[i], board2[i]));
+            if (i < remainingShips.length) {
+                sb.append(String.format("%-35s   %-35s   %s%n", board1[i], board2[i], remainingShips[i]));
+            } else {
+                sb.append(String.format("%-35s   %s%n", board1[i], board2[i]));
+            }
         }
         return sb.toString();
     }

@@ -11,6 +11,19 @@ public class UserInteractionManager {
     private static final Scanner scanner = new Scanner(System.in);
     private static Interpreter interpreter;
 
+    public static void setPositionInterpreter() {
+        interpreter = new PositionInterpreter();
+    }
+    public static void setOrientationInterpreter() {
+        interpreter = new OrientationInterpreter();
+    }
+    public static void setABSelectionInterpreter() {
+        interpreter = new ABSelectionInterpreter();
+    }
+    public static void setPortInterpreter() {
+        interpreter = new PortInterpreter();
+    }
+
     public static Cell createPositionFromInput() {
         Cell cell;
         while (true) {
@@ -34,19 +47,6 @@ public class UserInteractionManager {
         }
         System.out.println();
         return input;
-    }
-
-    public static void setPositionInterpreter() {
-        interpreter = new PositionInterpreter();
-    }
-    public static void setOrientationInterpreter() {
-        interpreter = new OrientationInterpreter();
-    }
-    public static void setABSelectionInterpreter() {
-        interpreter = new ABSelectionInterpreter();
-    }
-    public static void setPortInterpreter() {
-        interpreter = new PortInterpreter();
     }
 
     public static boolean getShipOrientationFromInput() {
