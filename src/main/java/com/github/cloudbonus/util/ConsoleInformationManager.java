@@ -144,16 +144,7 @@ public class ConsoleInformationManager {
         return sequence;
     }
 
-    public static void printGameInfo(User user, String opponentName) {
-        ConsoleInformationManager.clearConsole();
-        ConsoleInformationManager.printHeader();
-        ConsoleInformationManager.printBoardNames(user.getName(), opponentName);
-        ConsoleInformationManager.printRemainingShips(user.getLeftBoard(), user.getRightBoard());
-        ConsoleInformationManager.printMap(user);
-        System.out.println("Game info:");
-    }
-
-    public static String getGameInfo(User user, String opponentName) {
+    public static String printGameInfo(User user, String opponentName) {
         StringBuilder sb = new StringBuilder();
         String header = """
                                             
@@ -181,7 +172,6 @@ public class ConsoleInformationManager {
         for (int i = 0; i < board1.length; i++) {
             sb.append(String.format("%-35s   %s\n", board1[i], board2[i]));
         }
-        sb.append("\nYou are allowed only to watch");
         return sb.toString();
     }
 

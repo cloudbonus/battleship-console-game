@@ -65,7 +65,9 @@ public class BattleshipGameClientEndpoint
 
     private void handleAttackMessage(String message, Session session) throws IOException {
         Cell cell = user.giveResponse(ConsoleInformationManager.createCellFromInput(message));
-        ConsoleInformationManager.printGameInfo(user, opponentName);
+        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println(info);
+        System.out.println("Game info:");
         System.out.printf("%s's turn\n", opponentName);
         System.out.printf("%s attacked %s\n", opponentName, message);
         processAttackResult(cell, session);
@@ -93,7 +95,9 @@ public class BattleshipGameClientEndpoint
         } else {
             handleNonShipMessage(message);
         }
-        ConsoleInformationManager.printGameInfo(user, opponentName);
+        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println(info);
+        System.out.println("Game info:");
         handleTurn(message, session);
     }
 
@@ -144,7 +148,9 @@ public class BattleshipGameClientEndpoint
     }
 
     private void handleDefaultMessage(String message, Session session) throws IOException {
-        ConsoleInformationManager.printGameInfo(user, opponentName);
+        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println(info);
+        System.out.println("Game info:");
         if ("END_TURN".equals(message)) {
             System.out.printf("%s missed!\n", opponentName);
         }

@@ -53,7 +53,8 @@ public class BattleshipGameServerEndpoint {
             } else {
                 handleDefaultMessage(message, session);
             }
-            String info = ConsoleInformationManager.getGameInfo(user, opponentName);
+            String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+            info = info + "\nYou are allowed only to watch";
             for (Session s : sessions) {
                 if (!(boolean) s.getUserProperties().get("canPlay")) {
                     s.getBasicRemote().sendText(info);
@@ -65,7 +66,9 @@ public class BattleshipGameServerEndpoint {
     private void handleNameMessage(String message, Session session) throws IOException {
         opponentName = message.substring(5);
         session.getBasicRemote().sendText("NAME_" + user.getName());
-        ConsoleInformationManager.printGameInfo(user, opponentName);
+        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println(info);
+        System.out.println("Game info:");
         System.out.printf("%s's turn\n", opponentName);
     }
 
@@ -82,6 +85,7 @@ public class BattleshipGameServerEndpoint {
     private void handleAttackMessage(String message, Session session) throws IOException {
         Cell cell = user.giveResponse(ConsoleInformationManager.createCellFromInput(message));
         ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println("Game info:");
         System.out.printf("%s's turn\n", opponentName);
         System.out.printf("%s attacked %s\n", opponentName, message);
         processAttackResult(cell, session);
@@ -109,7 +113,9 @@ public class BattleshipGameServerEndpoint {
         } else {
             handleNonShipMessage(message);
         }
-        ConsoleInformationManager.printGameInfo(user, opponentName);
+        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println(info);
+        System.out.println("Game info:");
         handleTurn(message, session);
     }
 
@@ -161,7 +167,9 @@ public class BattleshipGameServerEndpoint {
     }
 
     private void handleDefaultMessage(String message, Session session) throws IOException {
-        ConsoleInformationManager.printGameInfo(user, opponentName);
+        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
+        System.out.println(info);
+        System.out.println("Game info:");
         if ("END_TURN".equals(message)) {
             System.out.printf("%s missed!\n", opponentName);
         }

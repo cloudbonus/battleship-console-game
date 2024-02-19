@@ -91,15 +91,46 @@ public class BotPlayer extends User implements Bot {
     }
 
 
-    private Cell generateSmartPosition() {
+//    private Cell generateSmartPosition() {
+//        int largestShipSize = super.getRightBoard().getMaxRemainingShipSize();
+//        int emptyCells = super.getRightBoard().getEmptyCells().size();
+//        if (emptyCells > 128) {
+//            return generateRandomPosition();
+//        }
+//        Cell maxEmptyCell = getMaxEmptyArea();
+//        if (maxEmptyCell != null) {
+//            return maxEmptyCell;
+//        }
+//        for (int x = 0; x < Board.BOARD_SIZE; x++) {
+//            for (int y = 0; y < Board.BOARD_SIZE; y++) {
+//                if (canPlaceShip(x, y, largestShipSize)) {
+//                    return new Cell(x, y, SHOT);
+//                }
+//            }
+//        }
+//        return generateRandomPosition();
+//    }
+//
+//    private Cell getMaxEmptyArea() {
+//        int maxCount = 0;
+//        Cell maxCell = null;
+//        for (int x = 0; x < Board.BOARD_SIZE; x++) {
+//            for (int y = 0; y < Board.BOARD_SIZE; y++) {
+//                int count = countEmptyCellsAround(x, y);
+//                if (count > maxCount) {
+//                    maxCount = count;
+//                    maxCell = new Cell(x, y, SHOT);
+//                }
+//            }
+//        }
+//        return maxCell;
+//    }
+
+        private Cell generateSmartPosition() {
         int largestShipSize = super.getRightBoard().getMaxRemainingShipSize();
         int emptyCells = super.getRightBoard().getEmptyCells().size();
         if (emptyCells > 128) {
             return generateRandomPosition();
-        }
-        Cell maxEmptyCell = getMaxEmptyArea();
-        if (maxEmptyCell != null) {
-            return maxEmptyCell;
         }
         for (int x = 0; x < Board.BOARD_SIZE; x++) {
             for (int y = 0; y < Board.BOARD_SIZE; y++) {
@@ -110,22 +141,6 @@ public class BotPlayer extends User implements Bot {
         }
         return generateRandomPosition();
     }
-
-    private Cell getMaxEmptyArea() {
-        int maxCount = 0;
-        Cell maxCell = null;
-        for (int x = 0; x < Board.BOARD_SIZE; x++) {
-            for (int y = 0; y < Board.BOARD_SIZE; y++) {
-                int count = countEmptyCellsAround(x, y);
-                if (count > maxCount) {
-                    maxCount = count;
-                    maxCell = new Cell(x, y, SHOT);
-                }
-            }
-        }
-        return maxCell;
-    }
-
     private int countEmptyCellsAround(int x, int y) {
         int count = 0;
         for (int i = -1; i <= 1; i++) {
@@ -139,21 +154,7 @@ public class BotPlayer extends User implements Bot {
         }
         return count;
     }
-//    private Cell generateSmartPosition() {
-//        int largestShipSize = ((BasicBoard) super.getRightBoard()).getMaxRemainingShipSize();
-//        int emptyCells = super.getRightBoard().getEmptyCells().size();
-//        if (emptyCells > 128) {
-//            return generateRandomPosition();
-//        }
-//        for (int x = 0; x < Board.BOARD_SIZE; x++) {
-//            for (int y = 0; y < Board.BOARD_SIZE; y++) {
-//                if (canPlaceShip(x, y, largestShipSize)) {
-//                    return new Cell(x, y, SHOT);
-//                }
-//            }
-//        }
-//        return generateRandomPosition();
-//    }
+
     private boolean canPlaceShip(int x, int y, int shipSize) {
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         for (int[] direction : directions) {
