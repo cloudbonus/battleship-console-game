@@ -57,7 +57,7 @@ public class BasicBoard extends Board{
     }
 
     public void updateShipsOnBoard(int ship) {
-        remainingShipSizes.remove(ship);
+        remainingShipSizes.remove(Integer.valueOf(ship));
     }
 
     public Integer getMaxRemainingShipSize() {
