@@ -13,6 +13,5 @@ public abstract class User implements Player{
     private CompleteBoard leftBoard;
     private BasicBoard rightBoard;
     public abstract String attackOpponentOnline();
-
     public abstract void updateRightBoard(Cell cell);
 }

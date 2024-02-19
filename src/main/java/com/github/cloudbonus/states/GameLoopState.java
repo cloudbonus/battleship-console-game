@@ -71,7 +71,7 @@ public class GameLoopState implements EnterState {
 
     private boolean playTurn(User attacker, User defender) throws InterruptedException {
         while (true) {
-            ConsoleInformationManager.printGameStatus(firstUser, defender.getName());
+            ConsoleInformationManager.printGameStatus(firstUser, "Bot Alex");
             System.out.println("Game info:");
             System.out.printf("%s's turn%n", attacker.getName());
             Cell cell = attacker.attackOpponent(defender);
