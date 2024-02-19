@@ -19,7 +19,7 @@ public class StartMultiplayerModeState implements EnterState {
     
     private static final String A_MODE = "A";
 
-    private StateMachine stateMachine;
+    private final StateMachine stateMachine;
     @Override
     public void enter(){
         startMultiplayerGame();
