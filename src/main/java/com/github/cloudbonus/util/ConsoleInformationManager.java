@@ -70,34 +70,6 @@ public class ConsoleInformationManager {
         System.out.println("Please input the position (use only A-P for letters and 1-16 for numbers, e.g., A13):");
     }
 
-    public static void printRemainingShips(CompleteBoard firstBoard, BasicBoard secondBoard) {
-        String firstPlayerCount = String.format("   Remaining ships: %d", firstBoard.getRemainingShipsCount());
-        String secondPlayerCount = String.format("   Remaining ships: %d", secondBoard.getRemainingShipsCount());
-        System.out.printf("%-35s   %s%n", firstPlayerCount, secondPlayerCount);
-    }
-
-    public static void printMap(User player) {
-        String[] board1 = player.getLeftBoard().getState().split("\n");
-        String[] board2 = player.getRightBoard().getState().split("\n");
-        String[] remainingShips = player.getRightBoard().getRemainingShips().split("\n");
-
-
-        for (int i = 0; i < board1.length; i++) {
-            if (i < remainingShips.length) {
-                System.out.printf("%-35s   %-35s   %s%n", board1[i], board2[i], remainingShips[i]);
-            } else {
-                System.out.printf("%-35s   %s%n", board1[i], board2[i]);
-            }
-        }
-        System.out.println();
-    }
-
-    public static void printBoardNames(String firstPlayer, String secondPlayer) {
-        String firstPlayerName = "   " + firstPlayer;
-        String secondPlayerName = "   " + secondPlayer;
-        System.out.printf("%-35s   %s%n", firstPlayerName, secondPlayerName);
-    }
-
     public static void welcomeUser(String userName) {
         System.out.println("Welcome, " + userName + "! Congratulations on joining the Battleship game!");
     }
@@ -214,13 +186,6 @@ public class ConsoleInformationManager {
         printHeader();
         printShipPlacementModeMenu();
         UserInteractionManager.setABSelectionInterpreter();
-    }
-
-    public static void printGameStatus(User firstUser, String opponentName) {
-        printHeader();
-        printBoardNames(firstUser.getName(), opponentName);
-        printRemainingShips(firstUser.getLeftBoard(), firstUser.getRightBoard());
-        printMap(firstUser);
     }
 }
 

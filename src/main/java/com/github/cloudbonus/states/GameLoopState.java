@@ -1,27 +1,21 @@
 package com.github.cloudbonus.states;
 
 import com.github.cloudbonus.board.BasicBoard;
-import com.github.cloudbonus.board.Cell;
 import com.github.cloudbonus.board.CompleteBoard;
-import com.github.cloudbonus.board.Ship;
 import com.github.cloudbonus.board.ShipPlacementManager;
+import com.github.cloudbonus.service.GameService;
 import com.github.cloudbonus.stateMachine.EnterState;
 import com.github.cloudbonus.stateMachine.StateMachine;
 import com.github.cloudbonus.user.BotPlayer;
 import com.github.cloudbonus.user.User;
 import com.github.cloudbonus.user.HumanPlayerProvider;
-import com.github.cloudbonus.util.ConsoleInformationManager;
 import com.github.cloudbonus.util.UserInteractionManager;
-
-import static com.github.cloudbonus.board.CellState.*;
 
 public class GameLoopState implements EnterState {
     public GameLoopState(StateMachine stateMachine){
         this.stateMachine = stateMachine;
     }
-
-    private static final long sleepTime = 2000;
-    
+    private static final long sleepTime = 1000;
     private final StateMachine stateMachine;
     private User firstUser;
     @Override
@@ -55,47 +49,39 @@ public class GameLoopState implements EnterState {
         User player = firstUser;
         User bot = setupBot(manager);
 
+        GameService playerGameService = new GameService();
+        playerGameService.setUser(player);
+        playerGameService.setOpponentName(bot.getName());
+
+        GameService botGameService = new GameService();
+        botGameService.setUser(bot);
+        botGameService.setOpponentName(player.getName());
+        botGameService.disableConsoleOutput();
+
         boolean gameOn = true;
 
         while (gameOn) {
-            gameOn = playTurn(player, bot);
+            gameOn = playTurn(playerGameService, botGameService);
             Thread.sleep(sleepTime);
             if (gameOn) {
-                gameOn = playTurn(bot, player);
+                gameOn = playTurn(botGameService, playerGameService);
             }
             Thread.sleep(sleepTime);
         }
-
         enterGameOverState();
     }
 
-    private boolean playTurn(User attacker, User defender) throws InterruptedException {
-        while (true) {
-            ConsoleInformationManager.printGameStatus(firstUser, "Bot Alex");
-            System.out.println("Game info:");
-            System.out.printf("%s's turn%n", attacker.getName());
-            Cell cell = attacker.attackOpponent(defender);
-
-            if (defender.hasLost()) {
-                System.out.printf("Player %s has lost. Congratulations %s%n", defender.getName(), attacker.getName());
+    private boolean playTurn(GameService attacker, GameService defender) throws InterruptedException {
+        String position = attacker.attack("Start"); // Player 1
+        do {
+            String attackResponse = defender.processAttack(position); // Player 2
+            if ("LOST".equals(attackResponse)) {
+                System.out.printf("Game finished. %s won.%n", attacker.getUserName());
                 return false;
             }
-            System.out.printf("%s attacked %s%n", attacker.getName(), ConsoleInformationManager.createInputFromCell(cell));
-
-            if (cell.getCellState() != SEIZED_SHOT && cell.getCellState() != DESTROYED) {
-                System.out.printf("%s missed!%n", attacker.getName());
-                break;
-            } else {
-                System.out.printf("%s hit! Congratulations, you can attack once more%n", attacker.getName());
-                if (cell.getCellState() == DESTROYED) {
-                    Ship lastDestroyedShip = defender.getLeftBoard().getLastDestroyedShip();
-                    System.out.printf("%s's ship of size %s has been destroyed%n", defender.getName(), lastDestroyedShip.getSize());
-                    lastDestroyedShip.getPosition().forEach(shipCellPosition -> attacker.getRightBoard().updatePosition(shipCellPosition));
-                    attacker.getRightBoard().updateShipsOnBoard(lastDestroyedShip.getSize());
-                }
-                Thread.sleep(sleepTime);
-            }
-        }
+            position = attacker.processCellState(attackResponse);
+            Thread.sleep(sleepTime);
+        } while (!"END_TURN".equals(position));
         return true;
     }
 

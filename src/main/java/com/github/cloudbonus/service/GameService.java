@@ -3,6 +3,7 @@ package com.github.cloudbonus.service;
 import com.github.cloudbonus.board.Cell;
 import com.github.cloudbonus.board.CellState;
 import com.github.cloudbonus.board.Ship;
+import com.github.cloudbonus.user.Bot;
 import com.github.cloudbonus.user.User;
 import com.github.cloudbonus.util.ConsoleInformationManager;
 import lombok.Getter;
@@ -15,41 +16,61 @@ import static com.github.cloudbonus.board.CellState.SEIZED_SHOT;
 
 public class GameService {
     @Setter
+    @Getter
     private User user;
     @Setter
     @Getter
     private String opponentName;
     private Cell position;
+    private boolean disableConsoleOutput = false;
 
     public String getUserName() {
         return user.getName();
     }
 
     public String printGameInfo() {
+        if (!disableConsoleOutput) {
+            ConsoleInformationManager.clearConsole();
+        }
         return ConsoleInformationManager.printGameInfo(user, opponentName);
     }
-    public String attack(String message) {
-        ConsoleInformationManager.clearConsole();
-        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
-        System.out.println(info);
-        System.out.println("Game info:");
-        if ("END_TURN".equals(message)) {
-            System.out.printf("%s missed!\n", opponentName);
+
+    public void disableConsoleOutput() {
+        this.disableConsoleOutput = true;
+    }
+
+    private void println(String message) {
+        if (!disableConsoleOutput) {
+            System.out.println(message);
         }
-        System.out.println("Your turn");
-        String position = user.attackOpponentOnline();
+    }
+
+    private void printf(String format, Object... args) {
+        if (!disableConsoleOutput) {
+            System.out.printf(format, args);
+        }
+    }
+
+    public String attack(String message) {
+        String info = printGameInfo();
+        println(info);
+        println("Game info:");
+        if ("END_TURN".equals(message)) {
+            printf("%s missed!\n", opponentName);
+        }
+        println("Your turn");
+        String position = user.attackOpponent();
         this.position = ConsoleInformationManager.createCellFromInput(position);
         return position;
     }
 
     public String processAttack(String message) {
         Cell cell = user.giveResponse(ConsoleInformationManager.createCellFromInput(message));
-        ConsoleInformationManager.clearConsole();
-        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
-        System.out.println(info);
-        System.out.println("Game info:");
-        System.out.printf("%s's turn\n", opponentName);
-        System.out.printf("%s attacked %s\n", opponentName, message);
+        String info = printGameInfo();
+        println(info);
+        println("Game info:");
+        printf("%s's turn\n", opponentName);
+        printf("%s attacked %s\n", opponentName, message);
         if (user.hasLost()) {
             return "LOST";
         } else if (cell.getCellState() == DESTROYED) {
@@ -57,49 +78,57 @@ public class GameService {
             int size = lastDestroyedShip.getPosition().size();
             String end = ConsoleInformationManager.createInputFromCell(lastDestroyedShip.getPosition().get(size - 1));
             String start = ConsoleInformationManager.createInputFromCell(lastDestroyedShip.getPosition().get(0));
-            System.out.printf("Your ship of size %s has been destroyed\n", lastDestroyedShip.getSize());
+            printf("Your ship of size %s has been destroyed\n", lastDestroyedShip.getSize());
             return String.format("SHIP_%s_%s_%d", start, end, lastDestroyedShip.getSize());
         } else {
-            System.out.printf("%s hit! Stay prepared for another imminent attack\n", opponentName);
+            if (cell.getCellState() == SEIZED_SHOT) {
+                printf("%s hit! Stay prepared for another imminent attack\n", opponentName);
+            }
             return cell.getCellState().name();
         }
     }
 
     public String processCellState(String message) {
         if (message.startsWith("SHIP_")) {
-            handleShipMessage(message);
+            processShipMessage(message);
         } else {
-            handleNonShipMessage(message);
+            processNonShipMessage(message);
         }
-        ConsoleInformationManager.clearConsole();
-        String info = ConsoleInformationManager.printGameInfo(user, opponentName);
-        System.out.println(info);
-        System.out.println("Game info:");
-        return handleTurn(message);
+        String info = printGameInfo();
+        println(info);
+        println("Game info:");
+        return processTurn(message);
     }
 
-    private void handleShipMessage(String message) {
+    private void processShipMessage(String message) {
         String[] parts = message.split("_");
         String secondValue = parts[1];
         String thirdValue = parts[2];
         String fourthValue = parts[3];
+
+        if (user instanceof Bot) ((Bot) user).clearHitCells();
 
         if (secondValue.equals(thirdValue)) {
             updateBoardWithCellState("DESTROYED");
         } else {
             List<Cell> cells = ConsoleInformationManager.generateSequence(secondValue, thirdValue);
             cells.forEach(cell -> user.updateRightBoard(cell));
-            updateShipsOnBoard(fourthValue);
-            System.out.printf("You have destroyed a ship of size %s\n", fourthValue);
+            printf("You have destroyed a ship of size %s\n", fourthValue);
         }
+        updateShipsOnBoard(fourthValue);
     }
 
-    private void handleNonShipMessage(String message) {
+    private void processNonShipMessage(String message) {
         updateBoardWithCellState(message);
     }
 
     private void updateBoardWithCellState(String message) {
         position.setCellState(CellState.valueOf(message));
+
+        if (user instanceof Bot && position.getCellState() == SEIZED_SHOT) {
+            ((Bot) user).addCellToHitCells(position);
+        }
+
         user.updateRightBoard(position);
     }
 
@@ -107,18 +136,18 @@ public class GameService {
         user.getRightBoard().updateShipsOnBoard(Integer.parseInt(fourthValue));
     }
 
-    private String handleTurn(String message) {
-        if (!message.startsWith("SHIP_") && position.getCellState() != SEIZED_SHOT && position.getCellState() != DESTROYED) {
-            System.out.println("You missed!");
-            System.out.printf("%s's turn\n", opponentName);
+    private String processTurn(String message) {
+        if (!message.startsWith("SHIP_") && position.getCellState() != SEIZED_SHOT) {
+            println("You missed!");
+            printf("%s's turn\n", opponentName);
             return "END_TURN";
         } else {
-            System.out.println("Your turn");
+            println("Your turn");
             if (message.startsWith("SHIP_")) {
-                System.out.printf("You have destroyed a ship of size %s\n", message.split("_")[3]);
+                printf("You have destroyed a ship of size %s\n", message.split("_")[3]);
             }
-            System.out.println("You hit! Congratulations, you can attack once more");
-            String position_proxy = user.attackOpponentOnline();
+            println("You hit! Congratulations, you can attack once more");
+            String position_proxy = user.attackOpponent();
             position = ConsoleInformationManager.createCellFromInput(position_proxy);
             return position_proxy;
         }

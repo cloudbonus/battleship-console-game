@@ -9,8 +9,6 @@ public abstract class Board {
     public static final int BOARD_SIZE = 16;
     private final Cell[][] boardGrid;
 
-    
-
     public Board() {
         this.boardGrid = new Cell[BOARD_SIZE][BOARD_SIZE];
         for (int i = 0; i < BOARD_SIZE; i++) {

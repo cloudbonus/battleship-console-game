@@ -48,6 +48,8 @@ Follow the on-screen prompts to start playing the game.
 - [ ] Refactor the code. There's a significant amount of refactoring to be done to improve the current codebase.
 - [ ] Add logging functionality to track the game moves.
 - [ ] Implement an Admin mode for enhanced control and management.
+- [ ] Improve spectator mode.
+
 
 ## Known Bugs
 

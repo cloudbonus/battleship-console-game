@@ -3,18 +3,15 @@ package com.github.cloudbonus;
 import com.github.cloudbonus.stateMachine.*;
 import com.github.cloudbonus.states.*;
 
-public class App
-{
+public class App {
     private static StateMachine stateMachine;
 
-    public static void main( String[] args ) {
+    public static void main(String[] args) {
         createAndSetupStateMachine();
         enterPrepareGameState();
     }
 
-
-
-    private static void createAndSetupStateMachine(){
+    private static void createAndSetupStateMachine() {
         stateMachine = new StateMachine();
 
         PrepareGameState prepareGameState = new PrepareGameState(stateMachine);
@@ -32,7 +29,7 @@ public class App
         stateMachine.addState(gameOverState);
     }
 
-    private static void enterPrepareGameState(){
+    private static void enterPrepareGameState() {
         stateMachine.changeState(PrepareGameState.class);
     }
 }

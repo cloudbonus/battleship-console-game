@@ -3,6 +3,7 @@ package com.github.cloudbonus.user;
 import com.github.cloudbonus.board.Board;
 import com.github.cloudbonus.board.Cell;
 import com.github.cloudbonus.board.CellState;
+import com.github.cloudbonus.util.ConsoleInformationManager;
 
 
 import java.util.ArrayList;
@@ -15,12 +16,55 @@ import static com.github.cloudbonus.board.CellState.*;
 public class BotPlayer extends User implements Bot {
     private final Random random = new Random();
     private final List<Cell> hitCells = new ArrayList<>();
+
+    @Override
+    public String attackOpponent() {
+        String target;
+        while (true) {
+            try {
+                target = ConsoleInformationManager.createInputFromCell(generatePosition());
+                if (getRightBoard().hasAttacked(target)) {
+                    throw new IllegalArgumentException("You’ve already shot this cell");
+                }
+                break;
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        return target;
+    }
+
     @Override
     public Cell generatePosition() {
         if (!hitCells.isEmpty()) {
             return generatePositionAlongShip();
         }
         return generateSmartPosition();
+    }
+
+    @Override
+    public Cell giveResponse(Cell position) {
+        return super.getLeftBoard().updatePosition(position);
+    }
+
+    @Override
+    public void updateRightBoard(Cell cell) {
+        super.getRightBoard().updatePosition(cell);
+    }
+
+    @Override
+    public boolean hasLost() {
+        return super.getLeftBoard().hasShipsOnBoard();
+    }
+
+    @Override
+    public void addCellToHitCells(Cell cell) {
+        hitCells.add(cell);
+    }
+
+    @Override
+    public void clearHitCells() {
+        this.hitCells.clear();
     }
 
     private Cell generatePositionAlongShip() {
@@ -126,7 +170,20 @@ public class BotPlayer extends User implements Bot {
 //        return maxCell;
 //    }
 
-        private Cell generateSmartPosition() {
+    //    private int countEmptyCellsAround(int x, int y) {
+//        int count = 0;
+//        for (int i = -1; i <= 1; i++) {
+//            for (int j = -1; j <= 1; j++) {
+//                int newX = x + i;
+//                int newY = y + j;
+//                if (isValidPosition(newX, newY) && getRightBoard().getPosition(newX, newY).getCellState() == EMPTY) {
+//                    count++;
+//                }
+//            }
+//        }
+//        return count;
+//    }
+    private Cell generateSmartPosition() {
         int largestShipSize = super.getRightBoard().getMaxRemainingShipSize();
         int emptyCells = super.getRightBoard().getEmptyCells().size();
         if (emptyCells > 128) {
@@ -140,19 +197,6 @@ public class BotPlayer extends User implements Bot {
             }
         }
         return generateRandomPosition();
-    }
-    private int countEmptyCellsAround(int x, int y) {
-        int count = 0;
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                int newX = x + i;
-                int newY = y + j;
-                if (isValidPosition(newX, newY) && getRightBoard().getPosition(newX, newY).getCellState() == EMPTY) {
-                    count++;
-                }
-            }
-        }
-        return count;
     }
 
     private boolean canPlaceShip(int x, int y, int shipSize) {
@@ -188,47 +232,6 @@ public class BotPlayer extends User implements Bot {
             y = random.nextInt(Board.BOARD_SIZE);
         } while (isCellAttacked(x, y));
         return new Cell(x, y, SHOT);
-    }
-
-    @Override
-    public boolean hasLost() {
-        return super.getLeftBoard().hasShipsOnBoard();
-    }
-
-    @Override
-    public Cell attackOpponent(Player opponent) {
-        Cell response;
-        while (true) {
-            try {
-                Cell target = generatePosition();
-                response = opponent.giveResponse(target);
-                updateRightBoard(response);
-                if (response.getCellState() == SEIZED_SHOT) {
-                    hitCells.add(response);
-                }
-                if (response.getCellState() == DESTROYED) {
-                    hitCells.clear();
-                }
-                break;
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        return response;
-    }
-
-    @Override
-    public String attackOpponentOnline() {
-        return null;
-    }
-
-    public void updateRightBoard(Cell cell) {
-        super.getRightBoard().updatePosition(cell);
-    }
-
-    @Override
-    public Cell giveResponse(Cell position) {
-        return super.getLeftBoard().updatePosition(position);
     }
 }
 

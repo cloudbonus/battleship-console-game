@@ -66,8 +66,6 @@ public class BattleshipGameClientEndpoint {
         String response = gameService.processAttack(message);
         if ("LOST".equals(response)) {
             handleLostMessage(session);
-        } else if (response.startsWith("SHIP_")) {
-            session.getBasicRemote().sendText(response);
         } else session.getBasicRemote().sendText(response);
     }
 

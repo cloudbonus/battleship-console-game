@@ -5,31 +5,9 @@ import com.github.cloudbonus.util.ConsoleInformationManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 
 public class HumanPlayer extends User {
-    @Override
-    public boolean hasLost() {
-        return super.getLeftBoard().hasShipsOnBoard();
-    }
 
     @Override
-    public Cell attackOpponent(Player opponent) {
-        Cell cell;
-        while (true) {
-            try {
-                ConsoleInformationManager.printPositionInputMessage();
-                UserInteractionManager.setPositionInterpreter();
-                Cell target = UserInteractionManager.createPositionFromInput();
-                cell = opponent.giveResponse(target);
-                updateRightBoard(cell);
-                break;
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        return cell;
-    }
-
-    @Override
-    public String attackOpponentOnline() {
+    public String attackOpponent() {
         String target;
         while (true) {
             try {
@@ -57,4 +35,8 @@ public class HumanPlayer extends User {
         super.getRightBoard().updatePosition(cell);
     }
 
+    @Override
+    public boolean hasLost() {
+        return super.getLeftBoard().hasShipsOnBoard();
+    }
 }

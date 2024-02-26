@@ -49,7 +49,7 @@ public class BattleshipGameServerEndpoint {
                 handleDefaultMessage(message, session);
             }
 
-            String info = gameService.printGameInfo();
+            String info = ConsoleInformationManager.printGameInfo(gameService.getUser(), gameService.getOpponentName());
             info = info + "\nYou are allowed only to watch host game";
             for (Session s : sessions) {
                 if (!(boolean) s.getUserProperties().get("canPlay")) {
@@ -61,7 +61,6 @@ public class BattleshipGameServerEndpoint {
 
     private void handleNameMessage(String message, Session session) throws IOException {
         gameService.setOpponentName(message.substring(5));
-        ConsoleInformationManager.clearConsole();
         String info = gameService.printGameInfo();
         System.out.println(info);
         System.out.println("Game info:");
@@ -83,8 +82,6 @@ public class BattleshipGameServerEndpoint {
         String response = gameService.processAttack(message);
         if ("LOST".equals(response)) {
             handleLostMessage(session);
-        } else if (response.startsWith("SHIP_")) {
-            session.getBasicRemote().sendText(response);
         } else session.getBasicRemote().sendText(response);
     }
 
