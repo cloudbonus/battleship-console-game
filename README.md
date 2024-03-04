@@ -20,7 +20,7 @@ The game’s color scheme is based on the **powerlevel10k** theme.
 2. **Run the Script**
    - For GNOME-Based Linux systems, execute `battleship_linux.sh`.
    - For Windows systems, execute `battleship_windows.bat`.
-
+   - If you are using something else, run the command `java -jar ./target/battleship-jar-with-dependencies.jar`.
 ## How to Play
 
 Follow the on-screen prompts to start playing the game.
