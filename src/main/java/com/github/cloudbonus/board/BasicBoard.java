@@ -1,81 +1,83 @@
 package com.github.cloudbonus.board;
 
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.board.cell.Cell;
+import com.github.cloudbonus.board.cell.CellType;
+import com.github.cloudbonus.board.ship.ShipType;
+import com.github.cloudbonus.util.CellConverter;
 import lombok.Getter;
 
-import java.util.*;
-import java.util.stream.Stream;
-
-import static com.github.cloudbonus.board.CellState.EMPTY;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
-public class BasicBoard extends Board{
-    private final List<Integer> remainingShipSizes = new ArrayList<>(Arrays.asList(1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6));
+public class BasicBoard extends Board {
+    private final Map<ShipType, Integer> remainingShips = new HashMap<>();
+
+    public BasicBoard() {
+        for (ShipType shipType : ShipType.values()) {
+            this.remainingShips.put(shipType, shipType.getNumShips());
+        }
+    }
+
     public int getRemainingShipsCount() {
-        return remainingShipSizes.size();
+        return this.remainingShips.values().stream().mapToInt(Integer::intValue).sum();
     }
 
     @Override
     public Cell updatePosition(Cell position) {
         Cell cell = super.getPosition(position.getX(), position.getY());
-        cell.setCellState(position.getCellState());
+        cell.setCellType(position.getCellType());
 
-        if (position.getCellState() == CellState.DESTROYED) {
-            int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
-            int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
+        if (position.getCellType() == CellType.SUNK) {
+            int[][] directions = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
-            for (int i = 0; i < 8; i++) {
-                int newX = position.getX() + dx[i];
-                int newY = position.getY() + dy[i];
+            for (int[] direction : directions) {
+                int newX = position.getX() + direction[0];
+                int newY = position.getY() + direction[1];
 
                 if (newX >= 0 && newX < BOARD_SIZE && newY >= 0 && newY < BOARD_SIZE) {
                     Cell neighbour = super.getPosition(newX, newY);
 
-                    if (neighbour.getCellState() != CellState.DESTROYED) {
-                        neighbour.setCellState(CellState.SHOT);
+                    if (neighbour.getCellType() != CellType.SUNK) {
+                        neighbour.setCellType(CellType.MISS);
                     }
                 }
             }
         }
         return cell;
     }
+
     public void resetMap() {
-        remainingShipSizes.clear();
-        Stream.of(1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6).forEach(remainingShipSizes::add);
+        for (ShipType shipType : ShipType.values()) {
+            this.remainingShips.put(shipType, shipType.getNumShips());
+        }
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                getPosition(i, j).setCellState(EMPTY);
+                super.getPosition(i, j).setCellType(CellType.WATER);
             }
         }
     }
+
     public boolean hasAttacked(String position) {
-        Cell cell = ConsoleInformationManager.createCellFromInput(position);
-        return super.getPosition(cell.getX(), cell.getY()).getCellState() != EMPTY;
+        Cell cell = CellConverter.createCellFromInput(position);
+        return super.getPosition(cell.getX(), cell.getY()).getCellType() != CellType.WATER;
     }
 
-    public String getRemainingShips() {
-        Map<Integer, Integer> countMap = new HashMap<>();
+    public String getShipsState() {
         StringBuilder sb = new StringBuilder();
 
-        for (Integer size : remainingShipSizes) {
-            countMap.put(size, countMap.getOrDefault(size, 0) + 1);
-        }
         sb.append("Remaining Opponent's Ships\n");
         sb.append("───────────────────────────────\n");
-        for (int i = 1; i <= 6; i++) {
-            String shipIcon = countMap.containsKey(i) ? "☐" : "☒";
-            String shipCount = countMap.containsKey(i) ? String.valueOf(countMap.get(i)) : "No";
-            sb.append(String.format("%-6s - %s remaining%n", shipIcon.repeat(i), shipCount));
+        for (ShipType shipType : ShipType.values()) {
+            String shipIcon = this.remainingShips.get(shipType) > 0 ? CellType.SHIP.getSymbol() : CellType.SUNK.getSymbol();
+            String shipCount = this.remainingShips.get(shipType) > 0 ? String.valueOf(remainingShips.get(shipType)) : "No";
+            sb.append(String.format("%-" +(12+(9*shipType.getShipLength())) + "s ---   %-2s remaining%n", shipIcon.repeat(shipType.getShipLength()), shipCount));
         }
-
         return sb.toString();
     }
 
-    public void updateShipsOnBoard(int ship) {
-        remainingShipSizes.remove(Integer.valueOf(ship));
-    }
 
-    public Integer getMaxRemainingShipSize() {
-        return Collections.max(remainingShipSizes);
+    public void updateShipsOnBoard(ShipType shipType) {
+        this.remainingShips.put(shipType, remainingShips.get(shipType) - 1);
     }
 }

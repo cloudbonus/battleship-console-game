@@ -1,12 +1,14 @@
 package com.github.cloudbonus.board;
 
+import com.github.cloudbonus.board.ship.Ship;
+import com.github.cloudbonus.board.ship.ShipType;
+import com.github.cloudbonus.board.util.Observer;
+import com.github.cloudbonus.board.cell.Cell;
+import com.github.cloudbonus.board.cell.CellType;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-
-
-import static com.github.cloudbonus.board.CellState.*;
 
 @Getter
 public class CompleteBoard extends Board implements Observer {
@@ -19,14 +21,15 @@ public class CompleteBoard extends Board implements Observer {
     }
 
     public int getRemainingShipsCount() {
-        return ships.size();
+        return this.ships.size();
     }
+
     public void resetMap() {
-        ships.forEach(ship -> ship.getPosition().forEach(pos -> pos.setCellState(EMPTY)));
-        ships.clear();
+        this.ships.forEach(ship -> ship.getPosition().forEach(pos -> pos.setCellType(CellType.WATER)));
+        this.ships.clear();
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                getPosition(i, j).setCellState(EMPTY);
+                super.getPosition(i, j).setCellType(CellType.WATER);
             }
         }
     }
@@ -34,53 +37,59 @@ public class CompleteBoard extends Board implements Observer {
     @Override
     public Cell updatePosition(Cell opponentTarget) {
         Cell cell = super.getPosition(opponentTarget.getX(), opponentTarget.getY());
-        CellState state = cell.getCellState();
-        if (state == CellState.SEIZED) {
-            cell.setCellState(SEIZED_SHOT);
+        CellType state = cell.getCellType();
+        if (state == CellType.SHIP) {
+            cell.setCellType(CellType.HIT);
             cell.notifyObserver();
-            return new Cell(cell.getX(), cell.getY(), cell.getCellState());
-        } else if (state == EMPTY) {
-            cell.setCellState(opponentTarget.getCellState());
-            return new Cell(cell.getX(), cell.getY(), cell.getCellState());
-        } else {
-            throw new IllegalArgumentException("You’ve already shot this cell");
-        }
+        } else cell.setCellType(opponentTarget.getCellType());
+        return new Cell(cell.getX(), cell.getY(), cell.getCellType());
     }
 
     public boolean hasShipsOnBoard() {
-        return getShips().isEmpty();
+        return this.ships.isEmpty();
     }
 
     public void addShip(Ship ship) {
         ship.attach(this);
-        getShips().add(ship);
+        this.ships.add(ship);
     }
 
     @Override
     public void update() {
-        getShips().stream()
-                .filter(Ship::isShipDestroyed)
-                .findFirst()
-                .ifPresent(ship -> {
-                    lastDestroyedShip = ship;
-                    ship.getPosition().forEach(this::updateMapAroundDestroyedShip);
-                    getShips().remove(ship);
-                });
+        for (Ship ship : this.ships) {
+            if (ship.isShipDestroyed()) {
+                this.lastDestroyedShip = ship;
+                for (Cell position : ship.getPosition()) {
+                    updateMapAroundDestroyedShip(position);
+                }
+                this.ships.remove(ship);
+                break;
+            }
+        }
     }
 
     private void updateMapAroundDestroyedShip(Cell cell) {
-        int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
-        int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
-        for (int i = 0; i < 8; i++) {
-            int newX = cell.getX() + dx[i];
-            int newY = cell.getY() + dy[i];
+        for (int[] direction : directions) {
+            int newX = cell.getX() + direction[0];
+            int newY = cell.getY() + direction[1];
             if (newX >= 0 && newX < BOARD_SIZE && newY >= 0 && newY < BOARD_SIZE) {
                 Cell neighbour = super.getPosition(newX, newY);
-                if (neighbour.getCellState() == CellState.EMPTY) {
-                    neighbour.setCellState(CellState.SHOT);
+                if (neighbour.getCellType() == CellType.WATER) {
+                    neighbour.setCellType(CellType.MISS);
                 }
             }
         }
+    }
+
+    public int getTotalShipsPlacedOfThisType(ShipType shipType) {
+        int count = 0;
+        for (Ship s : this.ships) {
+            if (s.getShipType() == shipType) {
+                count++;
+            }
+        }
+        return count;
     }
 }

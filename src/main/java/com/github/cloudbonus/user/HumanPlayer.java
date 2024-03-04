@@ -1,6 +1,7 @@
 package com.github.cloudbonus.user;
 
-import com.github.cloudbonus.board.Cell;
+import com.github.cloudbonus.board.cell.Cell;
+import com.github.cloudbonus.exceptions.CellAlreadyAttackedException;
 import com.github.cloudbonus.util.ConsoleInformationManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 
@@ -11,14 +12,14 @@ public class HumanPlayer extends User {
         String target;
         while (true) {
             try {
-                ConsoleInformationManager.printPositionInputMessage();
                 UserInteractionManager.setPositionInterpreter();
-                target = UserInteractionManager.createPositionFromInputOnline();
+                ConsoleInformationManager.printPositionInputMessage();
+                target = UserInteractionManager.createPositionFromInput();
                 if (getRightBoard().hasAttacked(target)) {
-                    throw new IllegalArgumentException("You’ve already shot this cell");
+                    throw new CellAlreadyAttackedException("You’ve already shot this cell");
                 }
                 break;
-            } catch (IllegalArgumentException e) {
+            } catch (CellAlreadyAttackedException e) {
                 System.out.println(e.getMessage());
             }
         }

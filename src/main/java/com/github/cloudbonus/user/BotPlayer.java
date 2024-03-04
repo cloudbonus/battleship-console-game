@@ -1,17 +1,13 @@
 package com.github.cloudbonus.user;
 
 import com.github.cloudbonus.board.Board;
-import com.github.cloudbonus.board.Cell;
-import com.github.cloudbonus.board.CellState;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.board.cell.Cell;
+import com.github.cloudbonus.board.cell.CellType;
+import com.github.cloudbonus.board.ship.ShipType;
+import com.github.cloudbonus.exceptions.CellAlreadyAttackedException;
+import com.github.cloudbonus.util.CellConverter;
 
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
-
-import static com.github.cloudbonus.board.CellState.*;
+import java.util.*;
 
 public class BotPlayer extends User implements Bot {
     private final Random random = new Random();
@@ -22,12 +18,12 @@ public class BotPlayer extends User implements Bot {
         String target;
         while (true) {
             try {
-                target = ConsoleInformationManager.createInputFromCell(generatePosition());
+                target = CellConverter.createInputFromCell(generatePosition());
                 if (getRightBoard().hasAttacked(target)) {
-                    throw new IllegalArgumentException("You’ve already shot this cell");
+                    throw new CellAlreadyAttackedException("You’ve already shot this cell");
                 }
                 break;
-            } catch (IllegalArgumentException e) {
+            } catch (CellAlreadyAttackedException e) {
                 System.out.println(e.getMessage());
             }
         }
@@ -36,7 +32,7 @@ public class BotPlayer extends User implements Bot {
 
     @Override
     public Cell generatePosition() {
-        if (!hitCells.isEmpty()) {
+        if (!this.hitCells.isEmpty()) {
             return generatePositionAlongShip();
         }
         return generateSmartPosition();
@@ -59,7 +55,7 @@ public class BotPlayer extends User implements Bot {
 
     @Override
     public void addCellToHitCells(Cell cell) {
-        hitCells.add(cell);
+        this.hitCells.add(cell);
     }
 
     @Override
@@ -68,50 +64,44 @@ public class BotPlayer extends User implements Bot {
     }
 
     private Cell generatePositionAlongShip() {
-        if (hitCells.size() == 1) {
-            return generatePositionAroundHit(hitCells.get(0));
+        if (this.hitCells.size() == 1) {
+            return generatePositionAroundHit(this.hitCells.get(0));
         } else {
-            hitCells.sort(Comparator.comparing(Cell::getX).thenComparing(Cell::getY));
-            Cell firstCell = hitCells.get(0);
-            Cell lastCell = hitCells.get(hitCells.size() - 1);
+            this.hitCells.sort(Comparator.comparing(Cell::getX).thenComparing(Cell::getY));
+            Cell firstCell = this.hitCells.get(0);
+            Cell lastCell = this.hitCells.get(this.hitCells.size() - 1);
 
             if (firstCell.getX() == lastCell.getX()) {
-                return generatePositionAboveOrBelow(firstCell, lastCell);
+                return generatePosition(firstCell, lastCell, true);
             } else {
-                return generatePositionToLeftOrRight(firstCell, lastCell);
+                return generatePosition(firstCell, lastCell, false);
             }
         }
     }
 
-
-    private Cell generatePositionAboveOrBelow(Cell firstCell, Cell lastCell) {
-        int x = firstCell.getX();
-        int yAbove = firstCell.getY() - 1;
-        int yBelow = lastCell.getY() + 1;
+    private Cell generatePosition(Cell firstCell, Cell lastCell, boolean isVertical) {
+        int fixedCoordinate = isVertical ? firstCell.getX() : firstCell.getY();
+        int variableCoordinateOne = isVertical ? firstCell.getY() - 1 : firstCell.getX() - 1;
+        int variableCoordinateTwo = isVertical ? lastCell.getY() + 1 : lastCell.getX() + 1;
         List<Cell> possiblePositions = new ArrayList<>();
-        if (isValidPosition(x, yAbove) && !isCellAttacked(x, yAbove)) {
-            possiblePositions.add(new Cell(x, yAbove, SHOT));
-        }
-        if (isValidPosition(x, yBelow) && !isCellAttacked(x, yBelow)) {
-            possiblePositions.add(new Cell(x, yBelow, SHOT));
+
+        int xCoordinate, yCoordinate;
+
+        for (int variableCoordinate : new int[]{variableCoordinateOne, variableCoordinateTwo}) {
+            if (isVertical) {
+                xCoordinate = fixedCoordinate;
+                yCoordinate = variableCoordinate;
+            } else {
+                xCoordinate = variableCoordinate;
+                yCoordinate = fixedCoordinate;
+            }
+
+            if (isValidAndNotAttacked(xCoordinate, yCoordinate)) {
+                possiblePositions.add(new Cell(xCoordinate, yCoordinate, CellType.MISS));
+            }
         }
 
-        return possiblePositions.get(random.nextInt(possiblePositions.size()));
-    }
-
-    private Cell generatePositionToLeftOrRight(Cell firstCell, Cell lastCell) {
-        int y = firstCell.getY();
-        int xLeft = firstCell.getX() - 1;
-        int xRight = lastCell.getX() + 1;
-
-        List<Cell> possiblePositions = new ArrayList<>();
-        if (isValidPosition(xLeft, y) && !isCellAttacked(xLeft, y)) {
-            possiblePositions.add(new Cell(xLeft, y, SHOT));
-        }
-        if (isValidPosition(xRight, y) && !isCellAttacked(xRight, y)) {
-            possiblePositions.add(new Cell(xRight, y, SHOT));
-        }
-        return possiblePositions.get(random.nextInt(possiblePositions.size()));
+        return possiblePositions.get(this.random.nextInt(possiblePositions.size()));
     }
 
     private Cell generatePositionAroundHit(Cell cell) {
@@ -122,98 +112,75 @@ public class BotPlayer extends User implements Bot {
             int newX = cell.getX() + direction[0];
             int newY = cell.getY() + direction[1];
 
-            if (isValidPosition(newX, newY) && !isCellAttacked(newX, newY)) {
-                possiblePositions.add(new Cell(newX, newY, SHOT));
+            if (isValidAndNotAttacked(newX, newY)) {
+                possiblePositions.add(new Cell(newX, newY, CellType.MISS));
             }
         }
 
         if (possiblePositions.isEmpty()) {
             return null;
         } else {
-            return possiblePositions.get(random.nextInt(possiblePositions.size()));
+            return possiblePositions.get(this.random.nextInt(possiblePositions.size()));
         }
     }
 
-
-//    private Cell generateSmartPosition() {
-//        int largestShipSize = super.getRightBoard().getMaxRemainingShipSize();
-//        int emptyCells = super.getRightBoard().getEmptyCells().size();
-//        if (emptyCells > 128) {
-//            return generateRandomPosition();
-//        }
-//        Cell maxEmptyCell = getMaxEmptyArea();
-//        if (maxEmptyCell != null) {
-//            return maxEmptyCell;
-//        }
-//        for (int x = 0; x < Board.BOARD_SIZE; x++) {
-//            for (int y = 0; y < Board.BOARD_SIZE; y++) {
-//                if (canPlaceShip(x, y, largestShipSize)) {
-//                    return new Cell(x, y, SHOT);
-//                }
-//            }
-//        }
-//        return generateRandomPosition();
-//    }
-//
-//    private Cell getMaxEmptyArea() {
-//        int maxCount = 0;
-//        Cell maxCell = null;
-//        for (int x = 0; x < Board.BOARD_SIZE; x++) {
-//            for (int y = 0; y < Board.BOARD_SIZE; y++) {
-//                int count = countEmptyCellsAround(x, y);
-//                if (count > maxCount) {
-//                    maxCount = count;
-//                    maxCell = new Cell(x, y, SHOT);
-//                }
-//            }
-//        }
-//        return maxCell;
-//    }
-
-    //    private int countEmptyCellsAround(int x, int y) {
-//        int count = 0;
-//        for (int i = -1; i <= 1; i++) {
-//            for (int j = -1; j <= 1; j++) {
-//                int newX = x + i;
-//                int newY = y + j;
-//                if (isValidPosition(newX, newY) && getRightBoard().getPosition(newX, newY).getCellState() == EMPTY) {
-//                    count++;
-//                }
-//            }
-//        }
-//        return count;
-//    }
     private Cell generateSmartPosition() {
-        int largestShipSize = super.getRightBoard().getMaxRemainingShipSize();
         int emptyCells = super.getRightBoard().getEmptyCells().size();
-        if (emptyCells > 128) {
+        if (emptyCells > 64) {
             return generateRandomPosition();
         }
+
+        int maxPotential = 0;
+        Cell bestCell = null;
+
+
         for (int x = 0; x < Board.BOARD_SIZE; x++) {
             for (int y = 0; y < Board.BOARD_SIZE; y++) {
-                if (canPlaceShip(x, y, largestShipSize)) {
-                    return new Cell(x, y, SHOT);
+                int potential = calculatePotential(x, y);
+                if (potential > maxPotential) {
+                    maxPotential = potential;
+                    bestCell = new Cell(x, y, CellType.MISS);
                 }
             }
         }
-        return generateRandomPosition();
+
+        return bestCell != null ? bestCell : generateRandomPosition();
     }
 
-    private boolean canPlaceShip(int x, int y, int shipSize) {
+    private int calculatePotential(int x, int y) {
+        int potential = 0;
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        Map<ShipType, Integer> remainingShipSizes = super.getRightBoard().getRemainingShips();
         for (int[] direction : directions) {
-            for (int i = 0; i < shipSize; i++) {
-                int newX = x + direction[0] * i;
-                int newY = y + direction[1] * i;
-                if (!isValidPosition(newX, newY) || isCellAttacked(newX, newY)) {
-                    break;
+            for (ShipType shipType : remainingShipSizes.keySet()) {
+                int length = 0;
+                while (true) {
+                    int newX = x + direction[0] * length;
+                    int newY = y + direction[1] * length;
+
+                    if (!isValidPosition(newX, newY) || isCellAttacked(newX, newY)) {
+                        break;
+                    }
+
+                    length++;
                 }
-                if (i == shipSize - 1) {
-                    return true;
+
+                if (length >= shipType.getShipLength()) {
+                    potential += length;
                 }
             }
         }
-        return false;
+
+        return potential;
+    }
+
+    private Cell generateRandomPosition() {
+        int x, y;
+        do {
+            x = this.random.nextInt(Board.BOARD_SIZE);
+            y = this.random.nextInt(Board.BOARD_SIZE);
+        } while (isCellAttacked(x, y));
+        return new Cell(x, y, CellType.MISS);
     }
 
     private boolean isValidPosition(int x, int y) {
@@ -221,17 +188,14 @@ public class BotPlayer extends User implements Bot {
     }
 
     private boolean isCellAttacked(int x, int y) {
-        CellState state = getRightBoard().getPosition(x, y).getCellState();
-        return state == SHOT || state == SEIZED_SHOT || state == DESTROYED;
+        CellType state = super.getRightBoard().getPosition(x, y).getCellType();
+        return state == CellType.MISS || state == CellType.HIT || state == CellType.SUNK;
     }
 
-    private Cell generateRandomPosition() {
-        int x, y;
-        do {
-            x = random.nextInt(Board.BOARD_SIZE);
-            y = random.nextInt(Board.BOARD_SIZE);
-        } while (isCellAttacked(x, y));
-        return new Cell(x, y, SHOT);
+    private boolean isValidAndNotAttacked(int x, int y) {
+        return isValidPosition(x, y) && !isCellAttacked(x, y);
     }
 }
+
+
 

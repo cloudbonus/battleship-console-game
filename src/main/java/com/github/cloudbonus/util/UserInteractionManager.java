@@ -1,11 +1,6 @@
 package com.github.cloudbonus.util;
 
-import com.github.cloudbonus.board.Cell;
-import lombok.Getter;
-
 import java.util.Scanner;
-
-import static com.github.cloudbonus.util.ConsoleInformationManager.createCellFromInput;
 
 public class UserInteractionManager {
     private static final Scanner scanner = new Scanner(System.in);
@@ -14,36 +9,29 @@ public class UserInteractionManager {
     public static void setPositionInterpreter() {
         interpreter = new PositionInterpreter();
     }
+
     public static void setOrientationInterpreter() {
         interpreter = new OrientationInterpreter();
     }
+
     public static void setABSelectionInterpreter() {
         interpreter = new ABSelectionInterpreter();
     }
+
     public static void setPortInterpreter() {
         interpreter = new PortInterpreter();
     }
 
-    public static Cell createPositionFromInput() {
-        Cell cell;
-        while (true) {
-            String input = getInputFromUser();
-            if (isValidPosition(input)) {
-                cell = createCellFromInput(input);
-                break;
-            } else System.out.println("Input does not match the pattern");
-        }
-        System.out.println();
-        return cell;
-    }
-
-    public static String createPositionFromInputOnline() {
+    public static String createPositionFromInput() {
         String input;
         while (true) {
             input = getInputFromUser();
             if (isValidPosition(input)) {
                 break;
-            } else System.out.println("Input does not match the pattern");
+            } else {
+                String message= "Input does not match the pattern. Try again: ";
+                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
+            }
         }
         System.out.println();
         return input;
@@ -57,18 +45,21 @@ public class UserInteractionManager {
                 isVertical = input.equals("V");
                 break;
             } else {
-                System.out.println("Input does not match the pattern");
+                String message= "Input does not match the pattern. Try again: ";
+                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
             }
         }
         return isVertical;
     }
+
     public static String getABSelectionFromInput() {
         while (true) {
             String input = getInputFromUser();
             if (isValidPosition(input)) {
                 return input;
             } else {
-                System.out.println("Input does not match the pattern");
+                String message= "Input does not match the pattern. Try again: ";
+                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
             }
         }
     }
@@ -79,14 +70,15 @@ public class UserInteractionManager {
             if (isValidPosition(input)) {
                 return Integer.parseInt(input);
             } else {
-                System.out.println("Input does not match the pattern");
+                String message= "Input does not match the pattern. Try again: ";
+                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
             }
         }
     }
 
     public static String getInputNameFromUser() {
         System.out.println("Hello, how should I address you?");
-        System.out.println("Please enter:");
+        System.out.print("Please enter: ");
         return scanner.nextLine();
     }
 
@@ -101,14 +93,7 @@ public class UserInteractionManager {
 
 }
 
-@Getter
-class InputContext {
-    private final String input;
-
-    public InputContext(String input) {
-        this.input = input;
-    }
-
+record InputContext(String input) {
 }
 
 interface Interpreter {
@@ -118,7 +103,7 @@ interface Interpreter {
 class PositionInterpreter implements Interpreter {
     @Override
     public boolean interpret(InputContext context) {
-        String input = context.getInput();
+        String input = context.input();
         return input.matches("^[A-P][1-9]$|^[A-P]1[0-6]$");
     }
 }
@@ -126,7 +111,7 @@ class PositionInterpreter implements Interpreter {
 class OrientationInterpreter implements Interpreter {
     @Override
     public boolean interpret(InputContext context) {
-        String input = context.getInput();
+        String input = context.input();
         return input.matches("^H$|^V$");
     }
 }
@@ -134,7 +119,7 @@ class OrientationInterpreter implements Interpreter {
 class ABSelectionInterpreter implements Interpreter {
     @Override
     public boolean interpret(InputContext context) {
-        String input = context.getInput();
+        String input = context.input();
         return input.matches("^A$|^B$");
     }
 }
@@ -142,7 +127,7 @@ class ABSelectionInterpreter implements Interpreter {
 class PortInterpreter implements Interpreter {
     @Override
     public boolean interpret(InputContext context) {
-        String input = context.getInput();
+        String input = context.input();
         return input.matches("^(1[5-9]\\d{2}|[2-7]\\d{3}|8000)$");
     }
 }

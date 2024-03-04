@@ -6,9 +6,9 @@ The game is played on a 16x16 grid, where the columns are labeled from A to P an
 
 The game offers two modes: solo play against a bot or multiplayer mode using websockets for real-time interaction. In both modes, players can choose to place their ships on the grid either manually or automatically, following the rule that ships cannot overlap or be adjacent to each other.
 
-During the game, players take turns guessing the coordinates of their opponent's ships. The game provides feedback in the form of "hit," "destroyed," or "miss." If a player misses, the turn shifts to the opponent.
+During the game, players take turns guessing the coordinates of their opponent's ships. The game provides feedback in the form of "hit," "sunk," or "miss." If a player misses, the turn shifts to the opponent.
 
-The primary objective is to be the first to destroy all of the opponent's ships. Each move is visually represented on the grid, with a cross denoting a "miss" and a cross inside a box indicating a "hit" or "destroyed" ship.
+The primary objective is to be the first to destroy all the opponent's ships. Each move is visually represented on the grid, with a cross denoting a "miss" and a cross inside a box indicating a "hit" or "sunk" ship.
 
 ## Installation
 
@@ -17,7 +17,7 @@ The primary objective is to be the first to destroy all of the opponent's ships.
     git clone https://github.com/cloudbonus/senla-project.git 
     ```
 2. **Run the Script**
-   - For Linux systems, execute `battleship_linux.sh`.
+   - For GNOME-Based Linux systems, execute `battleship_linux.sh`.
    - For Windows systems, execute `battleship_windows.bat`.
 
 ## How to Play
@@ -41,11 +41,11 @@ Follow the on-screen prompts to start playing the game.
 
 - During each turn, the bot is programmed to concentrate on a specific action: either finalizing an attack or searching a ship.
 - In the “searching” phase, the bot uses strategic tactics. If the largest ship has not been hit and there are no areas left on the opponent’s field where such a ship could be located, the bot aims for such an area. At the beginning of the game, the bot uses random coordinates.
-- The “finalizing an attack” phase means that if a hit resulted in a “hit” ship, the bot must destroy the ship before moving on to the “searching” phase.
+- The “finalizing an attack” phase means that if a hit resulted in a “hit” ship, the bot must sink the ship before moving on to the “searching” phase.
 
 ## To-Do
 
-- [ ] Refactor the code. There's a significant amount of refactoring to be done to improve the current codebase.
+- [x] Refactor the code. There's a significant amount of refactoring to be done to improve the current codebase.
 - [ ] Add logging functionality to track the game moves.
 - [ ] Implement an Admin mode for enhanced control and management.
 - [ ] Improve spectator mode.

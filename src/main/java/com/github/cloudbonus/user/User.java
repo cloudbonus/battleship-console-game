@@ -1,7 +1,7 @@
 package com.github.cloudbonus.user;
 
 import com.github.cloudbonus.board.BasicBoard;
-import com.github.cloudbonus.board.Cell;
+import com.github.cloudbonus.board.cell.Cell;
 import com.github.cloudbonus.board.CompleteBoard;
 import lombok.Data;
 

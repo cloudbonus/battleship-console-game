@@ -1,6 +1,6 @@
 package com.github.cloudbonus.user;
 
-import com.github.cloudbonus.board.Cell;
+import com.github.cloudbonus.board.cell.Cell;
 
 public interface Player {
     String attackOpponent();

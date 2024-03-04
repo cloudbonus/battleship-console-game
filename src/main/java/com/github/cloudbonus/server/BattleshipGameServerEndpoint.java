@@ -5,9 +5,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.github.cloudbonus.board.*;
-import com.github.cloudbonus.service.GameService;
-import com.github.cloudbonus.user.User;
+import com.github.cloudbonus.board.cell.CellType;
+import com.github.cloudbonus.game.BattleController;
 import com.github.cloudbonus.util.ConsoleInformationManager;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
@@ -17,7 +16,7 @@ import org.glassfish.tyrus.server.Server;
 @ServerEndpoint(value = "/game")
 public class BattleshipGameServerEndpoint {
     @Setter
-    private static GameService gameService;
+    private static BattleController battleController;
     private static volatile boolean isFinished = false;
     private static int connectedClients = 0;
     private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<>());
@@ -37,20 +36,20 @@ public class BattleshipGameServerEndpoint {
     public void onMessage(String message, Session session) throws IOException {
         boolean canPlay = (boolean) session.getUserProperties().get("canPlay");
         if (canPlay) {
-            if (message.startsWith("NAME_")) {
+            if (message.startsWith("NAME")) {
                 handleNameMessage(message, session);
-            } else if (message.equals("LOST")) {
-                handleLostMessage(session);
+            } else if (message.startsWith("LOST")) {
+                handleLostMessage(message, session);
             } else if (message.matches("^[A-P][1-9]$|^[A-P]1[0-6]$")) {
                 handleAttackMessage(message, session);
-            } else if (CellState.isCellState(message) || message.startsWith("SHIP_")) {
+            } else if (CellType.isCellState(message) || message.startsWith("SUNK")) {
                 handleCellStateMessage(message, session);
             } else {
-                handleDefaultMessage(message, session);
+                handleDefaultMessage(session);
             }
 
-            String info = ConsoleInformationManager.printGameInfo(gameService.getUser(), gameService.getOpponentName());
-            info = info + "\nYou are allowed only to watch host game";
+            String info = ConsoleInformationManager.printGameInfo(battleController.getUser(), battleController.getOpponentName());
+            info += ConsoleInformationManager.getWatchOnlyMessage();
             for (Session s : sessions) {
                 if (!(boolean) s.getUserProperties().get("canPlay")) {
                     s.getBasicRemote().sendText(info);
@@ -60,33 +59,30 @@ public class BattleshipGameServerEndpoint {
     }
 
     private void handleNameMessage(String message, Session session) throws IOException {
-        gameService.setOpponentName(message.substring(5));
-        String info = gameService.printGameInfo();
+        battleController.setOpponentName(message.substring(5));
+        String info = battleController.printGameInfo();
         System.out.println(info);
-        System.out.println("Game info:");
-        System.out.printf("%s's turn\n", gameService.getOpponentName());
-        session.getBasicRemote().sendText("NAME_" + gameService.getUserName());
+        System.out.println(ConsoleInformationManager.getOpponentTurnMessage(battleController.getOpponentName()));
+        session.getBasicRemote().sendText("NAME_" + battleController.getUserName());
     }
 
-    private void handleLostMessage(Session session) {
-        System.out.println("Quitting the game");
+    private void handleLostMessage(String message, Session session) {
+        String reason = battleController.processCellState(message);
+        ConsoleInformationManager.printMatchResult(false, battleController.getOpponentName());
         try {
-            String message = String.format("Game finished. %s won.", gameService.getUserName());
-            session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, message));
+            session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, reason));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void handleAttackMessage(String message, Session session) throws IOException {
-        String response = gameService.processAttack(message);
-        if ("LOST".equals(response)) {
-            handleLostMessage(session);
-        } else session.getBasicRemote().sendText(response);
+        String response = battleController.processAttack(message);
+        session.getBasicRemote().sendText(response);
     }
 
     private void handleCellStateMessage(String message, Session session) throws IOException {
-        String response = gameService.processCellState(message);
+        String response = battleController.processCellState(message);
         if ("END_TURN".equals(response)) {
             session.getBasicRemote().sendText("END_TURN");
         } else {
@@ -94,23 +90,25 @@ public class BattleshipGameServerEndpoint {
         }
     }
 
-    private void handleDefaultMessage(String message, Session session) throws IOException {
-        String position = gameService.attack(message);
+    private void handleDefaultMessage(Session session) throws IOException {
+        String position = battleController.attack();
         session.getBasicRemote().sendText(position);
     }
 
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
-        System.out.printf("Session %s closed because of %s\n", session.getId(), closeReason);
+        boolean hasLost = battleController.getUser().hasLost();
+        if (hasLost) {
+            ConsoleInformationManager.printMatchResult(true, battleController.getOpponentName());
+        }
+        ConsoleInformationManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
         connectedClients--;
         isFinished = true;
     }
 
-    public static void startServer(int port, User user) {
+    public static void startServer(int port, BattleController battleController) {
         Server server;
-        GameService gameService = new GameService();
-        gameService.setUser(user);
-        BattleshipGameServerEndpoint.setGameService(gameService);
+        BattleshipGameServerEndpoint.setBattleController(battleController);
         server = new Server("localhost", port, "/websockets", null, BattleshipGameServerEndpoint.class);
         try {
             server.start();

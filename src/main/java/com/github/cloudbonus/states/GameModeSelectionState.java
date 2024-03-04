@@ -21,25 +21,25 @@ public class GameModeSelectionState implements EnterState {
     }
 
     private void printGameSetup(){
-        User firstUser = HumanPlayerProvider.getInstance();
-        ConsoleInformationManager.printGameSetup(firstUser);
+        User user = HumanPlayerProvider.getInstance();
+        ConsoleInformationManager.printGameSetup(user);
     }
 
     private void chooseGameMode() {
         String selectedMode = UserInteractionManager.getABSelectionFromInput();
 
         if (A_MODE.equals(selectedMode)) {
-            enterPrepareBoardModeState();
+            enterStartSingleplayerModeState();
         } else {
-            enterStartMultiplayerPlayerMode();
+            enterStartMultiplayerModeState();
         }
     }
 
-    private void enterPrepareBoardModeState(){
-        stateMachine.changeState(PrepareBoardModeState.class);
+    private void enterStartSingleplayerModeState(){
+        this.stateMachine.changeState(StartSingleplayerModeState.class);
     }
 
-    private void enterStartMultiplayerPlayerMode(){
-        stateMachine.changeState(StartMultiplayerModeState.class);
+    private void enterStartMultiplayerModeState(){
+        this.stateMachine.changeState(StartMultiplayerModeState.class);
     }
 }

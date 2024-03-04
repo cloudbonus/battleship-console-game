@@ -1,3 +1,2 @@
 #!/bin/bash
-java -jar ./target/senla-project-0.0.1-SNAPSHOT-jar-with-dependencies.jar
-
+gnome-terminal --window --maximize -- java -jar ./target/battleship-jar-with-dependencies.jar

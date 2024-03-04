@@ -14,16 +14,16 @@ public class GameOverState implements EnterState {
     @Override
     public void enter() {
         resetUser();
-        enterPrepareGameState();
+        enterGameModeSelectionState();
     }
 
     private void resetUser(){
-        User firstUser = HumanPlayerProvider.getInstance();
-        firstUser.getLeftBoard().resetMap();
-        firstUser.getRightBoard().resetMap();
+        User user = HumanPlayerProvider.getInstance();
+        user.getLeftBoard().resetMap();
+        user.getRightBoard().resetMap();
     }
 
-    private void enterPrepareGameState(){
-        stateMachine.changeState(PrepareGameState.class);
+    private void enterGameModeSelectionState(){
+        this.stateMachine.changeState(GameModeSelectionState.class);
     }
 }

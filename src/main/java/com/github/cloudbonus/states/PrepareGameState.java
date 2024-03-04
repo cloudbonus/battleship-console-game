@@ -40,6 +40,6 @@ public class PrepareGameState implements EnterState{
     }
 
     private void enterGameModeSelectionState(){
-        stateMachine.changeState(GameModeSelectionState.class);
+        this.stateMachine.changeState(GameModeSelectionState.class);
     }
 }

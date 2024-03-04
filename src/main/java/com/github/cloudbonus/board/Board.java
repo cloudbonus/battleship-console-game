@@ -1,9 +1,10 @@
 package com.github.cloudbonus.board;
 
+import com.github.cloudbonus.board.cell.Cell;
+import com.github.cloudbonus.board.cell.CellType;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.github.cloudbonus.board.CellState.EMPTY;
 
 public abstract class Board {
     public static final int BOARD_SIZE = 16;
@@ -13,8 +14,8 @@ public abstract class Board {
         this.boardGrid = new Cell[BOARD_SIZE][BOARD_SIZE];
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                Cell position = new Cell(i, j, EMPTY);
-                setPosition(position);
+                Cell position = new Cell(i, j, CellType.WATER);
+                this.boardGrid[i][j] = position;
             }
         }
     }
@@ -26,32 +27,28 @@ public abstract class Board {
         for (int x = 0; x < BOARD_SIZE; x++) {
             state.append(String.format("%2d|", x + 1));
             for (int y = 0; y < BOARD_SIZE; y++) {
-                state.append(getPosition(x, y).getCellState().getSymbol()).append(' ');
+                state.append(this.boardGrid[x][y].getCellType().getSymbol()).append(' ');
             }
             state.append("\n");
         }
         return state.toString();
     }
 
-    public Cell getPosition(int x, int y){
-        return boardGrid[x][y];
-    }
-
-    public void setPosition(Cell position) {
-        boardGrid[position.getX()][position.getY()] = position;
-    }
-
-    public abstract Cell updatePosition(Cell position);
-
-    public List<Cell> getEmptyCells(){
+    public List<Cell> getEmptyCells() {
         List<Cell> emptyCells = new ArrayList<>();
-        for (Cell[] cells : boardGrid) {
+        for (Cell[] cells : this.boardGrid) {
             for (Cell cell : cells) {
-                if (cell != null && cell.getCellState() == EMPTY) {
+                if (cell != null && cell.getCellType() == CellType.WATER) {
                     emptyCells.add(cell);
                 }
             }
         }
         return emptyCells;
     }
+
+    public Cell getPosition(int x, int y) {
+        return this.boardGrid[x][y];
+    }
+
+    public abstract Cell updatePosition(Cell position);
 }

@@ -13,25 +13,25 @@ public class StateMachine {
         if (isStateExists(type))
             return;
 
-        states.put(type, state);
+        this.states.put(type, state);
     }
 
     public void changeState(Class<? extends State> stateClass) {
         if (!isStateExists(stateClass))
             return;
 
-        if (currentState instanceof ExitState) {
-            ((ExitState) currentState).exit();
+        if (this.currentState instanceof ExitState) {
+            ((ExitState) this.currentState).exit();
         }
 
-        currentState = states.get(stateClass);
+        this.currentState = this.states.get(stateClass);
 
-        if (currentState instanceof EnterState) {
-            ((EnterState) currentState).enter();
+        if (this.currentState instanceof EnterState) {
+            ((EnterState) this.currentState).enter();
         }
     }
 
     private boolean isStateExists(Class<?> type) {
-        return states.containsKey(type);
+        return this.states.containsKey(type);
     }
 }
