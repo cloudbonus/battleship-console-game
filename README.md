@@ -10,6 +10,7 @@ During the game, players take turns guessing the coordinates of their opponent's
 
 The primary objective is to be the first to destroy all the opponent's ships. Each move is visually represented on the grid, with a cross denoting a "miss" and a cross inside a box indicating a "hit" or "sunk" ship.
 
+The game’s color scheme is based on the **powerlevel10k** theme.
 ## Installation
 
 1. **Clone the Repository**
