@@ -7,8 +7,7 @@ import com.github.cloudbonus.board.cell.Cell;
 import com.github.cloudbonus.board.cell.CellType;
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Getter
 public class CompleteBoard extends Board implements Observer {
@@ -91,5 +90,26 @@ public class CompleteBoard extends Board implements Observer {
             }
         }
         return count;
+    }
+    @Override
+    public String getRemainingShipsAfterGame() {
+        Map<String, Integer> shipCounts = new TreeMap<>();
+        StringBuilder sb = new StringBuilder();
+
+        for (Ship ship : this.ships) {
+            String shipIcon = getShipIcon(ship);
+            shipCounts.put(shipIcon, shipCounts.getOrDefault(shipIcon, 0) + 1);
+        }
+
+        for (Map.Entry<String, Integer> entry : shipCounts.entrySet()) {
+            sb.append(entry.getKey()).append(" x").append(entry.getValue()).append(" ");
+        }
+
+        return sb.toString();
+    }
+
+    private String getShipIcon(Ship ship) {
+        int length = ship.getShipType().getShipLength();
+        return CellType.SHIP.getSymbol().repeat(length);
     }
 }

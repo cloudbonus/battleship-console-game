@@ -16,7 +16,6 @@ public class StartSingleplayerModeState implements EnterState {
     public StartSingleplayerModeState(StateMachine stateMachine){
         this.stateMachine = stateMachine;
     }
-    private static final long sleepTime = 1000;
     private final StateMachine stateMachine;
     private User user;
     @Override
@@ -63,16 +62,15 @@ public class StartSingleplayerModeState implements EnterState {
 
         while (gameOn) {
             gameOn = playTurn(playerBattleController, botBattleController);
-            Thread.sleep(sleepTime);
             if (gameOn) {
                 gameOn = playTurn(botBattleController, playerBattleController);
             }
-            Thread.sleep(sleepTime);
         }
+        playerBattleController.printMatchStats();
         enterGameOverState();
     }
 
-    private boolean playTurn(BattleController attacker, BattleController defender) throws InterruptedException {
+    private boolean playTurn(BattleController attacker, BattleController defender) {
         String position = attacker.attack();
         do {
             String attackResponse = defender.processAttack(position);
@@ -83,10 +81,10 @@ public class StartSingleplayerModeState implements EnterState {
                 boolean isOutputOff = attacker.isDisableConsoleOutput();
 
                 ConsoleInformationManager.printMatchResult(isOutputOff, name);
+                BattleController.waitForUserInput();
                 return false;
             }
             position = attacker.processCellState(attackResponse);
-            Thread.sleep(sleepTime);
         } while (!"END_TURN".equals(position));
         return true;
     }

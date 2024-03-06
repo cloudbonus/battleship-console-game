@@ -11,8 +11,9 @@ import com.github.cloudbonus.util.ConsoleInformationManager;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.List;
-
 
 public class BattleController {
     @Setter
@@ -24,16 +25,33 @@ public class BattleController {
     private Cell position;
     @Getter
     private boolean disableConsoleOutput = false;
+    private static final long sleepTime = 2000;
+    private final GameStatistics gameStatistics;
+    @Getter
+    private boolean isMatchFinished = false;
 
+    public BattleController() {
+        this.gameStatistics = new GameStatistics();
+    }
     public String getUserName() {
         return this.user.getName();
     }
 
-    public String printGameInfo() {
+    public void toEndGame() {
+        this.isMatchFinished = true;
+    }
+
+    private String getGameInfo() {
         if (!this.disableConsoleOutput) {
             ConsoleInformationManager.clearConsole();
         }
         return ConsoleInformationManager.printGameInfo(this.user, this.opponentName);
+    }
+
+    private void incrementTotalTurns() {
+        if (!this.disableConsoleOutput) {
+            GameStatistics.incrementTotalTurns();
+        }
     }
 
     public void disableConsoleOutput() {
@@ -46,10 +64,22 @@ public class BattleController {
         }
     }
 
+    public void waitOpponentTurn() {
+        incrementTotalTurns();
+        String info = getGameInfo();
+        println(info);
+        println(ConsoleInformationManager.getOpponentTurnMessage(this.opponentName));
+    }
+
     public String attack() {
-        String info = printGameInfo();
+        incrementTotalTurns();
+        String info = getGameInfo();
         println(info);
         println(ConsoleInformationManager.getPlayerTurnMessage());
+        return executeAttack();
+    }
+
+    private String executeAttack() {
         String position = this.user.attackOpponent();
         this.position = CellConverter.createCellFromInput(position);
         return position;
@@ -57,7 +87,11 @@ public class BattleController {
 
     public String processAttack(String message) {
         Cell cell = this.user.giveResponse(CellConverter.createCellFromInput(message));
-        String info = printGameInfo();
+        if (cell.getCellType() != CellType.MISS && !this.user.hasLost()) {
+            incrementTotalTurns();
+        }
+        this.gameStatistics.incrementOpponentHitShots();
+        String info = getGameInfo();
         println(info);
         println(ConsoleInformationManager.getOpponentTurnMessage(this.opponentName));
         println(ConsoleInformationManager.getOpponentAttackMessage(this.opponentName, message));
@@ -80,6 +114,7 @@ public class BattleController {
         String shipName = ShipType.convertShipTypeToNormalString(lastDestroyedShip.getShipType());
 
         println(ConsoleInformationManager.getPlayerShipStatus(shipName, shipSize));
+        println(ConsoleInformationManager.getPlayerImminentAttackWarning(this.opponentName));
         if (this.user.hasLost()) {
             return String.format("LOST/%s/%s/%s", start, end, lastDestroyedShip.getShipType());
         }
@@ -92,6 +127,7 @@ public class BattleController {
         } else {
             println(ConsoleInformationManager.getOpponentMissMessage(this.opponentName));
         }
+
         return cell.getCellType().name();
     }
 
@@ -101,7 +137,10 @@ public class BattleController {
         } else {
             processNonShipMessage(message);
         }
-        String info = printGameInfo();
+
+        if (!"MISS".equals(message) && !message.startsWith("LOST")) incrementTotalTurns();
+
+        String info = getGameInfo();
         println(info);
         return processTurn(message);
     }
@@ -144,10 +183,20 @@ public class BattleController {
     private String processTurn(String message) {
         println(ConsoleInformationManager.getPlayerTurnMessage());
 
-        if (!message.startsWith("LOST") && !message.startsWith("SUNK") && this.position.getCellType() != CellType.HIT) {
+        if ("MISS".equals(message)) {
             println(ConsoleInformationManager.getPlayerMissMessage());
+
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            waitOpponentTurn();
             return "END_TURN";
         }
+
+        gameStatistics.incrementPlayerHitShots();
 
         if (message.startsWith("SUNK") || message.startsWith("LOST")) {
             ShipType shipType = ShipType.valueOf(message.split("/")[3]);
@@ -161,8 +210,44 @@ public class BattleController {
         }
 
         println(ConsoleInformationManager.getPlayerHitMessage());
-        String position_proxy = this.user.attackOpponent();
-        this.position = CellConverter.createCellFromInput(position_proxy);
-        return position_proxy;
+
+        if (disableConsoleOutput) {
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        return executeAttack();
+    }
+
+    public void printMatchStats() {
+        ConsoleInformationManager.printHeader();
+        ConsoleInformationManager.printStatsMessage();
+        System.out.println(gameStatistics.calculateGameDuration());
+
+        printStats(this.user.getName(), this.user.hasLost(), this.user.getLeftBoard().getRemainingShipsAfterGame());
+        System.out.println(gameStatistics.calculatePlayerEfficiency());
+
+        printStats(this.opponentName, !this.user.hasLost(), this.user.getRightBoard().getRemainingShipsAfterGame());
+        System.out.println(gameStatistics.calculateOpponentEfficiency());
+        waitForUserInput();
+    }
+
+    private void printStats(String playerName, boolean hasLost, String remainingShips) {
+        System.out.println("Player: " + playerName);
+        System.out.println("Status: " + ConsoleInformationManager.getMatchStatus(hasLost));
+        System.out.println("Remaining ships: " + (hasLost ? "no ships left" : remainingShips));
+    }
+
+    public static void waitForUserInput() {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Press any key to continue...");
+            reader.readLine();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 }

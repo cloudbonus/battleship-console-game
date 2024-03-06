@@ -1,6 +1,7 @@
 package com.github.cloudbonus.util;
 
 import com.github.cloudbonus.board.ship.ShipType;
+import com.github.cloudbonus.game.GameStatistics;
 import com.github.cloudbonus.user.User;
 
 import java.util.Arrays;
@@ -60,7 +61,6 @@ public class ConsoleInformationManager {
     public static void printMultiplayerMenu() {
         String message = """
                 Please select your role in the multiplayer game:
-                                           
                 A. Host (Start the server)
                 B. Client (Connect to the server)
                                            
@@ -73,7 +73,7 @@ public class ConsoleInformationManager {
     }
 
     public static void welcomeUser(String userName) {
-        System.out.printf("Welcome, %s%s%s! Congratulations on joining the Battleship game!%n", AnsiColor.GREEN, userName, AnsiColor.RESET);
+        System.out.printf("Welcome, %s%s%s! Congratulations on joining the Battleship game!\n\n", AnsiColor.GREEN, userName, AnsiColor.RESET);
     }
 
     public static void clearConsole() {
@@ -98,6 +98,95 @@ public class ConsoleInformationManager {
         String message = String.format("You are placing a %s of size %d. After this, you will have %d more of this type to place,\nand %d more ships in total to place.\n",
                 shipName, shipSize, totalShipsOfThisType - totalShipsPlacedOfThisType - 1, totalShips - totalShipsPlaced - 1);
         System.out.println(message);
+    }
+
+    private static String createGameHeader() {
+
+        String text = """
+                 ____       _______ _______ _      ______  _____ _    _ _____ _____\s
+                |  _ \\   /\\|__   __|__   __| |    |  ____|/ ____| |  | |_   _|  __  \\ \s
+                | |_) | /  \\  | |     | |  | |    | |__  | (___ | |__| | | | | |__) |
+                |  _ < / /\\ \\ | |     | |  | |    |  __|  \\___ \\|  __  | | | |  ___/
+                | |_) / ____ \\| |     | |  | |____| |____ ____) | |  | |_| |_| |   \s
+                |____/_/    \\_\\_|     |_|  |______|______|_____/|_|  |_|_____|_|   \s
+                """;
+        int totalLength = 109;
+        int padding = (totalLength - 69) / 2;
+        String paddingSpaces = " ".repeat(padding);
+
+        return Arrays.stream(text.split("\\n"))
+                .map(line -> paddingSpaces + line + paddingSpaces)
+                .collect(Collectors.joining("\n")) + "\n";
+    }
+
+    private static String createBoardNamesHeader(String userName, String opponentName) {
+        String firstPlayerName = String.format("   %s%s%s", AnsiColor.GREEN, userName, AnsiColor.RESET);
+        String secondPlayerName = String.format("   %s%s%s", AnsiColor.RED, opponentName, AnsiColor.RESET);
+        return String.format("\n%-44s   %s%n", firstPlayerName, secondPlayerName);
+    }
+
+    private static String createRemainingShipsHeader(int userCount, int opponentCount) {
+        String firstPlayerCount = String.format("   Remaining ships: %s%d%s", AnsiColor.GREEN, userCount, AnsiColor.RESET);
+        String secondPlayerCount = String.format("   Remaining ships: %s%d%s", AnsiColor.RED, opponentCount, AnsiColor.RESET);
+        return String.format("%-44s   %s%n", firstPlayerCount, secondPlayerCount);
+    }
+
+    private static String createBattleBody(String[]... args) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < args[0].length; i++) {
+            if (args.length > 2 && i < args[2].length) {
+                sb.append(String.format("%-35s   %-35s   %s%n", args[0][i], args[1][i], args[2][i]));
+            } else if (i == 12) {
+                sb.append(String.format("%-35s   %-35s   %s%n", args[0][i], args[1][i], getTurnMessage()));
+            } else {
+                sb.append(String.format("%-35s   %s%n", args[0][i], args[1][i]));
+            }
+        }
+        return sb.toString();
+    }
+
+    public static String printGameInfo(User user, String opponentName) {
+        StringBuilder sb = new StringBuilder();
+
+        String gameHeader = createGameHeader();
+        sb.append(gameHeader);
+
+        String boardNamesHeader = createBoardNamesHeader(user.getName(), opponentName);
+        sb.append(boardNamesHeader);
+
+        int userCount = user.getLeftBoard().getRemainingShipsCount();
+        int opponentCount = user.getRightBoard().getRemainingShipsSum();
+        String remainingShipsHeader = createRemainingShipsHeader(userCount, opponentCount);
+        sb.append(remainingShipsHeader);
+
+        String[] board1 = user.getLeftBoard().getState().split("\n");
+        String[] board2 = user.getRightBoard().getState().split("\n");
+        String[] remainingShips = user.getRightBoard().getShipsState().split("\n");
+
+        String boardsAndShips = createBattleBody(board1, board2, remainingShips);
+        sb.append(boardsAndShips);
+
+        return sb.toString();
+    }
+
+    public static void printGameSetup(User user) {
+        printHeader();
+        welcomeUser(user.getName());
+        printGameModeMenu();
+        UserInteractionManager.setABSelectionInterpreter();
+    }
+
+    public static void printMultiplayerSetup() {
+        printHeader();
+        printMultiplayerMenu();
+        UserInteractionManager.setABSelectionInterpreter();
+    }
+
+    public static void printShipPlacementSetup() {
+        clearConsole();
+        printHeader();
+        printShipPlacementModeMenu();
+        UserInteractionManager.setABSelectionInterpreter();
     }
 
     public static String getSunkMessage() {
@@ -152,10 +241,22 @@ public class ConsoleInformationManager {
         return String.format("You %s! Congratulations, you can attack once more", getHitMessage());
     }
 
-    public static void printMatchResult(boolean flag, String name){
+    public static String getTurnMessage() {
+        String s = String.format("MATCH TURN: %s%s%s", AnsiColor.PURPLE, GameStatistics.getTotalTurns(), AnsiColor.RESET);
+        s = String.format("%31s", s);
+        return String.format("%-31s", s);
+    }
+
+    public static void printMatchResult(boolean flag, String name) {
         AnsiColor color = flag ? AnsiColor.RED : AnsiColor.GREEN;
         String winnerName = flag ? name : "You";
-        System.out.printf("%sGame finished. %s win.%s\n", color, winnerName, AnsiColor.RESET);
+        System.out.printf("%sGame finished. %s win.%s\n\n", color, winnerName, AnsiColor.RESET);
+    }
+
+    public static String getMatchStatus(boolean flag) {
+        AnsiColor color = flag ? AnsiColor.RED : AnsiColor.GREEN;
+        String status = flag ? "LOST" : "WIN";
+        return String.format("%s%s%s", color, status, AnsiColor.RESET);
     }
 
     public static void printSessionClosure(String id, String message) {
@@ -163,97 +264,14 @@ public class ConsoleInformationManager {
     }
 
     public static String getReasonMessage() {
-        return String.format("%sGAME FINISHED%s", AnsiColor.PURPLE, AnsiColor.RESET);
+        return "game finished";
     }
 
     public static String getWatchOnlyMessage() {
         return String.format("\n%sYou are allowed only to watch host game%s\n", AnsiColor.YELLOW, AnsiColor.RESET);
     }
 
-    private static String createGameHeader() {
-
-        String text = """
-                 ____       _______ _______ _      ______  _____ _    _ _____ _____\s
-                |  _ \\   /\\|__   __|__   __| |    |  ____|/ ____| |  | |_   _|  __  \\ \s
-                | |_) | /  \\  | |     | |  | |    | |__  | (___ | |__| | | | | |__) |
-                |  _ < / /\\ \\ | |     | |  | |    |  __|  \\___ \\|  __  | | | |  ___/
-                | |_) / ____ \\| |     | |  | |____| |____ ____) | |  | |_| |_| |   \s
-                |____/_/    \\_\\_|     |_|  |______|______|_____/|_|  |_|_____|_|   \s
-                """;
-        int totalLength = 109;
-        int padding = (totalLength - 69) / 2;
-        String paddingSpaces = " ".repeat(padding);
-
-        return Arrays.stream(text.split("\\n"))
-                .map(line -> paddingSpaces + line + paddingSpaces)
-                .collect(Collectors.joining("\n")) + "\n";
-    }
-
-    private static String createBoardNamesHeader(String userName, String opponentName) {
-        String firstPlayerName = String.format("   %s%s%s", AnsiColor.GREEN, userName, AnsiColor.RESET);
-        String secondPlayerName = String.format("   %s%s%s", AnsiColor.RED, opponentName, AnsiColor.RESET);
-        return String.format("\n%-44s   %s%n", firstPlayerName, secondPlayerName);
-    }
-
-    private static String createRemainingShipsHeader(int userCount, int opponentCount) {
-        String firstPlayerCount = String.format("   Remaining ships: %s%d%s", AnsiColor.GREEN, userCount, AnsiColor.RESET);
-        String secondPlayerCount = String.format("   Remaining ships: %s%d%s", AnsiColor.RED, opponentCount, AnsiColor.RESET);
-        return String.format("%-44s   %s%n", firstPlayerCount, secondPlayerCount);
-    }
-
-    private static String createBattleBody(String[]... boards) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < boards[0].length; i++) {
-            if (boards.length > 2 && i < boards[2].length) {
-                sb.append(String.format("%-35s   %-35s   %s%n", boards[0][i], boards[1][i], boards[2][i]));
-            } else {
-                sb.append(String.format("%-35s   %s%n", boards[0][i], boards[1][i]));
-            }
-        }
-        return sb.toString();
-    }
-
-    public static String printGameInfo(User user, String opponentName) {
-        StringBuilder sb = new StringBuilder();
-
-        String gameHeader = createGameHeader();
-        sb.append(gameHeader);
-
-        String boardNamesHeader = createBoardNamesHeader(user.getName(), opponentName);
-        sb.append(boardNamesHeader);
-
-        int userCount = user.getLeftBoard().getRemainingShipsCount();
-        int opponentCount = user.getRightBoard().getRemainingShipsCount();
-        String remainingShipsHeader = createRemainingShipsHeader(userCount, opponentCount);
-        sb.append(remainingShipsHeader);
-
-        String[] board1 = user.getLeftBoard().getState().split("\n");
-        String[] board2 = user.getRightBoard().getState().split("\n");
-        String[] remainingShips = user.getRightBoard().getShipsState().split("\n");
-
-        String boardsAndShips = createBattleBody(board1, board2, remainingShips);
-        sb.append(boardsAndShips);
-
-        return sb.toString();
-    }
-
-    public static void printGameSetup(User user) {
-        printHeader();
-        welcomeUser(user.getName());
-        printGameModeMenu();
-        UserInteractionManager.setABSelectionInterpreter();
-    }
-
-    public static void printMultiplayerSetup() {
-        printHeader();
-        printMultiplayerMenu();
-        UserInteractionManager.setABSelectionInterpreter();
-    }
-
-    public static void printShipPlacementSetup() {
-        clearConsole();
-        printHeader();
-        printShipPlacementModeMenu();
-        UserInteractionManager.setABSelectionInterpreter();
+    public static void printStatsMessage() {
+        System.out.printf("%sStats of the Match%s\n\n", AnsiColor.YELLOW, AnsiColor.RESET);
     }
 }

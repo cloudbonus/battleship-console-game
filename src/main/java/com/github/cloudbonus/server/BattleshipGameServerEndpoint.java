@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.github.cloudbonus.board.cell.CellType;
 import com.github.cloudbonus.game.BattleController;
+import com.github.cloudbonus.game.GameStatistics;
 import com.github.cloudbonus.util.ConsoleInformationManager;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
@@ -16,7 +17,7 @@ import org.glassfish.tyrus.server.Server;
 @ServerEndpoint(value = "/game")
 public class BattleshipGameServerEndpoint {
     @Setter
-    private static BattleController battleController;
+    private static BattleController playerBattleController;
     private static volatile boolean isFinished = false;
     private static int connectedClients = 0;
     private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<>());
@@ -37,6 +38,7 @@ public class BattleshipGameServerEndpoint {
         boolean canPlay = (boolean) session.getUserProperties().get("canPlay");
         if (canPlay) {
             if (message.startsWith("NAME")) {
+                GameStatistics.startGameTime();
                 handleNameMessage(message, session);
             } else if (message.startsWith("LOST")) {
                 handleLostMessage(message, session);
@@ -48,7 +50,7 @@ public class BattleshipGameServerEndpoint {
                 handleDefaultMessage(session);
             }
 
-            String info = ConsoleInformationManager.printGameInfo(battleController.getUser(), battleController.getOpponentName());
+            String info = ConsoleInformationManager.printGameInfo(playerBattleController.getUser(), playerBattleController.getOpponentName());
             info += ConsoleInformationManager.getWatchOnlyMessage();
             for (Session s : sessions) {
                 if (!(boolean) s.getUserProperties().get("canPlay")) {
@@ -59,16 +61,16 @@ public class BattleshipGameServerEndpoint {
     }
 
     private void handleNameMessage(String message, Session session) throws IOException {
-        battleController.setOpponentName(message.substring(5));
-        String info = battleController.printGameInfo();
-        System.out.println(info);
-        System.out.println(ConsoleInformationManager.getOpponentTurnMessage(battleController.getOpponentName()));
-        session.getBasicRemote().sendText("NAME_" + battleController.getUserName());
+        playerBattleController.setOpponentName(message.substring(5));
+        playerBattleController.waitOpponentTurn();
+        session.getBasicRemote().sendText("NAME_" + playerBattleController.getUserName());
     }
 
     private void handleLostMessage(String message, Session session) {
-        String reason = battleController.processCellState(message);
-        ConsoleInformationManager.printMatchResult(false, battleController.getOpponentName());
+        GameStatistics.endGameTime();
+        String reason = playerBattleController.processCellState(message);
+        ConsoleInformationManager.printMatchResult(false, playerBattleController.getOpponentName());
+        playerBattleController.toEndGame();
         try {
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, reason));
         } catch (IOException e) {
@@ -77,12 +79,12 @@ public class BattleshipGameServerEndpoint {
     }
 
     private void handleAttackMessage(String message, Session session) throws IOException {
-        String response = battleController.processAttack(message);
+        String response = playerBattleController.processAttack(message);
         session.getBasicRemote().sendText(response);
     }
 
     private void handleCellStateMessage(String message, Session session) throws IOException {
-        String response = battleController.processCellState(message);
+        String response = playerBattleController.processCellState(message);
         if ("END_TURN".equals(response)) {
             session.getBasicRemote().sendText("END_TURN");
         } else {
@@ -91,24 +93,32 @@ public class BattleshipGameServerEndpoint {
     }
 
     private void handleDefaultMessage(Session session) throws IOException {
-        String position = battleController.attack();
+        String position = playerBattleController.attack();
         session.getBasicRemote().sendText(position);
     }
 
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
-        boolean hasLost = battleController.getUser().hasLost();
-        if (hasLost) {
-            ConsoleInformationManager.printMatchResult(true, battleController.getOpponentName());
+        boolean canPlay = (boolean) session.getUserProperties().get("canPlay");
+        boolean hasLost = playerBattleController.getUser().hasLost();
+        if (hasLost && canPlay) {
+            GameStatistics.endGameTime();
+            ConsoleInformationManager.printMatchResult(true, playerBattleController.getOpponentName());
+            playerBattleController.toEndGame();
         }
         ConsoleInformationManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
         connectedClients--;
         isFinished = true;
     }
 
+    public static void resetServer() {
+        isFinished = false;
+        sessions.clear();
+    }
+
     public static void startServer(int port, BattleController battleController) {
         Server server;
-        BattleshipGameServerEndpoint.setBattleController(battleController);
+        BattleshipGameServerEndpoint.setPlayerBattleController(battleController);
         server = new Server("localhost", port, "/websockets", null, BattleshipGameServerEndpoint.class);
         try {
             server.start();

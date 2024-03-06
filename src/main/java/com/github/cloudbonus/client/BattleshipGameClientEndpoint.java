@@ -2,6 +2,7 @@ package com.github.cloudbonus.client;
 
 import com.github.cloudbonus.board.cell.CellType;
 import com.github.cloudbonus.game.BattleController;
+import com.github.cloudbonus.game.GameStatistics;
 import com.github.cloudbonus.util.ConsoleInformationManager;
 import jakarta.websocket.*;
 import lombok.Setter;
@@ -15,14 +16,14 @@ import java.util.concurrent.CountDownLatch;
 @ClientEndpoint
 public class BattleshipGameClientEndpoint {
     @Setter
-    private static BattleController battleController;
+    private static BattleController playerBattleController;
     private static CountDownLatch latch;
 
     @OnOpen
     public void onOpen(Session session) {
         try {
             System.out.println("---connecting to the server");
-            String message = String.format("NAME_%s", battleController.getUserName());
+            String message = String.format("NAME_%s", playerBattleController.getUserName());
             session.getBasicRemote().sendText(message);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -33,7 +34,8 @@ public class BattleshipGameClientEndpoint {
     public void onMessage(String message, Session session) throws IOException {
         if (message.length() < 100) {
             if (message.startsWith("NAME")) {
-                battleController.setOpponentName(message.substring(5));
+                GameStatistics.startGameTime();
+                playerBattleController.setOpponentName(message.substring(5));
             }
 
             if (message.startsWith("LOST")) {
@@ -52,8 +54,10 @@ public class BattleshipGameClientEndpoint {
     }
 
     private void handleLostMessage(String message, Session session) {
-        String reason = battleController.processCellState(message);
-        ConsoleInformationManager.printMatchResult(false, battleController.getOpponentName());
+        GameStatistics.endGameTime();
+        String reason = playerBattleController.processCellState(message);
+        ConsoleInformationManager.printMatchResult(false, playerBattleController.getOpponentName());
+        playerBattleController.toEndGame();
         try {
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, reason));
         } catch (IOException e) {
@@ -62,12 +66,12 @@ public class BattleshipGameClientEndpoint {
     }
 
     private void handleAttackMessage(String message, Session session) throws IOException {
-        String response = battleController.processAttack(message);
+        String response = playerBattleController.processAttack(message);
         session.getBasicRemote().sendText(response);
     }
 
     private void handleCellStateMessage(String message, Session session) throws IOException {
-        String response = battleController.processCellState(message);
+        String response = playerBattleController.processCellState(message);
         if ("END_TURN".equals(response)) {
             session.getBasicRemote().sendText("END_TURN");
         } else {
@@ -76,27 +80,29 @@ public class BattleshipGameClientEndpoint {
     }
 
     private void handleDefaultMessage(Session session) throws IOException {
-        String position = battleController.attack();
+        String position = playerBattleController.attack();
         session.getBasicRemote().sendText(position);
     }
 
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
-        boolean hasLost = battleController.getUser().hasLost();
+        boolean hasLost = playerBattleController.getUser().hasLost();
         if (hasLost) {
-            ConsoleInformationManager.printMatchResult(true, battleController.getOpponentName());
+            GameStatistics.endGameTime();
+            ConsoleInformationManager.printMatchResult(true, playerBattleController.getOpponentName());
+            playerBattleController.toEndGame();
         }
+        GameStatistics.endGameTime();
         ConsoleInformationManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
         latch.countDown();
     }
 
     public static void startClient(int port, BattleController battleController) {
         latch = new CountDownLatch(1);
-
         ClientManager client = ClientManager.createClient();
         try {
             String args = String.format("ws://localhost:%s/websockets/game", port);
-            BattleshipGameClientEndpoint.setBattleController(battleController);
+            BattleshipGameClientEndpoint.setPlayerBattleController(battleController);
             try (Session ignored = client.connectToServer(BattleshipGameClientEndpoint.class, new URI(args))) {
                 latch.await();
             }

@@ -51,4 +51,5 @@ public abstract class Board {
     }
 
     public abstract Cell updatePosition(Cell position);
+    public abstract String getRemainingShipsAfterGame();
 }

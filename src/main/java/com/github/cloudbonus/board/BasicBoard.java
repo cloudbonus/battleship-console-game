@@ -6,12 +6,12 @@ import com.github.cloudbonus.board.ship.ShipType;
 import com.github.cloudbonus.util.CellConverter;
 import lombok.Getter;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 @Getter
 public class BasicBoard extends Board {
-    private final Map<ShipType, Integer> remainingShips = new HashMap<>();
+    private final Map<ShipType, Integer> remainingShips = new TreeMap<>();
 
     public BasicBoard() {
         for (ShipType shipType : ShipType.values()) {
@@ -19,7 +19,7 @@ public class BasicBoard extends Board {
         }
     }
 
-    public int getRemainingShipsCount() {
+    public int getRemainingShipsSum() {
         return this.remainingShips.values().stream().mapToInt(Integer::intValue).sum();
     }
 
@@ -62,7 +62,6 @@ public class BasicBoard extends Board {
         Cell cell = CellConverter.createCellFromInput(position);
         return super.getPosition(cell.getX(), cell.getY()).getCellType() != CellType.WATER;
     }
-
     public String getShipsState() {
         StringBuilder sb = new StringBuilder();
 
@@ -73,6 +72,18 @@ public class BasicBoard extends Board {
             String shipCount = this.remainingShips.get(shipType) > 0 ? String.valueOf(remainingShips.get(shipType)) : "No";
             sb.append(String.format("%-" +(12+(9*shipType.getShipLength())) + "s ---   %-2s remaining%n", shipIcon.repeat(shipType.getShipLength()), shipCount));
         }
+        return sb.toString();
+    }
+
+    @Override
+    public String getRemainingShipsAfterGame() {
+        StringBuilder sb = new StringBuilder();
+
+        for (Map.Entry<ShipType, Integer> entry : this.remainingShips.entrySet()) {
+            String shipIcon = CellType.SHIP.getSymbol();
+            sb.append(shipIcon.repeat(entry.getKey().getShipLength())).append(" x").append(entry.getValue()).append(" ");
+        }
+
         return sb.toString();
     }
 
