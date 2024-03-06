@@ -89,8 +89,8 @@ public class BattleController {
         Cell cell = this.user.giveResponse(CellConverter.createCellFromInput(message));
         if (cell.getCellType() != CellType.MISS && !this.user.hasLost()) {
             incrementTotalTurns();
+            this.gameStatistics.incrementOpponentHitShots();
         }
-        this.gameStatistics.incrementOpponentHitShots();
         String info = getGameInfo();
         println(info);
         println(ConsoleInformationManager.getOpponentTurnMessage(this.opponentName));

@@ -4,6 +4,7 @@ import com.github.cloudbonus.board.BasicBoard;
 import com.github.cloudbonus.board.CompleteBoard;
 import com.github.cloudbonus.board.ship.ShipPlacementManager;
 import com.github.cloudbonus.game.BattleController;
+import com.github.cloudbonus.game.GameStatistics;
 import com.github.cloudbonus.stateMachine.EnterState;
 import com.github.cloudbonus.stateMachine.StateMachine;
 import com.github.cloudbonus.user.BotPlayer;
@@ -60,12 +61,15 @@ public class StartSingleplayerModeState implements EnterState {
 
         boolean gameOn = true;
 
+        GameStatistics.startGameTime();
         while (gameOn) {
             gameOn = playTurn(playerBattleController, botBattleController);
             if (gameOn) {
                 gameOn = playTurn(botBattleController, playerBattleController);
             }
         }
+        GameStatistics.endGameTime();
+        BattleController.waitForUserInput();
         playerBattleController.printMatchStats();
         enterGameOverState();
     }
@@ -81,7 +85,6 @@ public class StartSingleplayerModeState implements EnterState {
                 boolean isOutputOff = attacker.isDisableConsoleOutput();
 
                 ConsoleInformationManager.printMatchResult(isOutputOff, name);
-                BattleController.waitForUserInput();
                 return false;
             }
             position = attacker.processCellState(attackResponse);
