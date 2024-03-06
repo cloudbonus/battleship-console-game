@@ -10,7 +10,7 @@ import com.github.cloudbonus.stateMachine.StateMachine;
 import com.github.cloudbonus.user.BotPlayer;
 import com.github.cloudbonus.user.User;
 import com.github.cloudbonus.user.HumanPlayerProvider;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 
 public class StartSingleplayerModeState implements EnterState {
@@ -50,12 +50,10 @@ public class StartSingleplayerModeState implements EnterState {
         UserInteractionManager.setPositionInterpreter();
         User bot = setupBot(manager);
 
-        BattleController playerBattleController = new BattleController();
-        playerBattleController.setUser(this.user);
+        BattleController playerBattleController = new BattleController(user);
         playerBattleController.setOpponentName(bot.getName());
 
-        BattleController botBattleController = new BattleController();
-        botBattleController.setUser(setupBot(manager));
+        BattleController botBattleController = new BattleController(bot);
         botBattleController.setOpponentName(this.user.getName());
         botBattleController.disableConsoleOutput();
 
@@ -76,19 +74,16 @@ public class StartSingleplayerModeState implements EnterState {
 
     private boolean playTurn(BattleController attacker, BattleController defender) {
         String position = attacker.attack();
-        do {
+        while (!"END_TURN".equals(position)) {
             String attackResponse = defender.processAttack(position);
-            if (attackResponse.startsWith("LOST")) {
-                attacker.processCellState(attackResponse);
-
+            position = attacker.processCellState(attackResponse);
+            if (ConsoleDisplayManager.getReasonMessage().equals(position)) {
                 String name = attacker.getUserName();
                 boolean isOutputOff = attacker.isDisableConsoleOutput();
-
-                ConsoleInformationManager.printMatchResult(isOutputOff, name);
+                ConsoleDisplayManager.printMatchResult(isOutputOff, name);
                 return false;
             }
-            position = attacker.processCellState(attackResponse);
-        } while (!"END_TURN".equals(position));
+        }
         return true;
     }
 

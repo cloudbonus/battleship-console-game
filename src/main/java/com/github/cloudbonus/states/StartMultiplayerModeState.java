@@ -7,7 +7,7 @@ import com.github.cloudbonus.server.BattleshipGameServerEndpoint;
 import com.github.cloudbonus.stateMachine.*;
 import com.github.cloudbonus.user.HumanPlayerProvider;
 import com.github.cloudbonus.user.User;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 
 public class StartMultiplayerModeState implements EnterState {
@@ -31,16 +31,15 @@ public class StartMultiplayerModeState implements EnterState {
         ShipPlacementManager manager = new ShipPlacementManager();
         manager.setupShips(user.getLeftBoard());
 
-        ConsoleInformationManager.printMultiplayerSetup();
+        ConsoleDisplayManager.printMultiplayerSetup();
         String selectedMode = UserInteractionManager.getABSelectionFromInput();
 
         UserInteractionManager.setPortInterpreter();
         System.out.print("Please provide the port number within the range of 1500 to 8000: ");
         int port = UserInteractionManager.getPortFromInput();
-        ConsoleInformationManager.clearConsole();
+        ConsoleDisplayManager.clearConsole();
 
-        BattleController playerBattleController = new BattleController();
-        playerBattleController.setUser(user);
+        BattleController playerBattleController = new BattleController(user);
 
         if (A_MODE.equals(selectedMode)) {
             BattleshipGameServerEndpoint.startServer(port, playerBattleController);

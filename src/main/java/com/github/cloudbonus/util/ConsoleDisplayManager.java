@@ -1,13 +1,13 @@
 package com.github.cloudbonus.util;
 
 import com.github.cloudbonus.board.ship.ShipType;
-import com.github.cloudbonus.game.GameStatistics;
 import com.github.cloudbonus.user.User;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class ConsoleInformationManager {
+public class ConsoleDisplayManager {
     public enum AnsiColor {
         RED("\u001B[31m"),
         GREEN("\u001B[32m"),
@@ -47,6 +47,11 @@ public class ConsoleInformationManager {
         String message = "Choose the orientation of the ship (H for horizontal, V for vertical): ";
         System.out.print(message);
     }
+    public static void printEmptyRows(int numRows) {
+        for(int i = 0; i < numRows; i++) {
+            System.out.println();
+        }
+    }
 
     public static void printShipPlacementModeMenu() {
         String message = """
@@ -69,7 +74,7 @@ public class ConsoleInformationManager {
     }
 
     public static void printPositionInputMessage() {
-        System.out.print("\nPlease input the position (use only A-P for letters and 1-16 for numbers, e.g., A13): ");
+        System.out.print("Please input the position (use only A-P for letters and 1-16 for numbers, e.g., A13): ");
     }
 
     public static void welcomeUser(String userName) {
@@ -137,7 +142,7 @@ public class ConsoleInformationManager {
             if (args.length > 2 && i < args[2].length) {
                 sb.append(String.format("%-35s   %-35s   %s%n", args[0][i], args[1][i], args[2][i]));
             } else if (i == 12) {
-                sb.append(String.format("%-35s   %-35s   %s%n", args[0][i], args[1][i], getTurnMessage()));
+                sb.append(String.format("%-35s   %-35s   %s%n", args[0][i], args[1][i], getTurnMessage(args[3][0])));
             } else {
                 sb.append(String.format("%-35s   %s%n", args[0][i], args[1][i]));
             }
@@ -145,9 +150,8 @@ public class ConsoleInformationManager {
         return sb.toString();
     }
 
-    public static String printGameInfo(User user, String opponentName) {
+    public static String getGameInfo(User user, String opponentName, int totalTurns) {
         StringBuilder sb = new StringBuilder();
-
         String gameHeader = createGameHeader();
         sb.append(gameHeader);
 
@@ -163,7 +167,7 @@ public class ConsoleInformationManager {
         String[] board2 = user.getRightBoard().getState().split("\n");
         String[] remainingShips = user.getRightBoard().getShipsState().split("\n");
 
-        String boardsAndShips = createBattleBody(board1, board2, remainingShips);
+        String boardsAndShips = createBattleBody(board1, board2, remainingShips, new String[]{String.valueOf(totalTurns)});
         sb.append(boardsAndShips);
 
         return sb.toString();
@@ -241,8 +245,8 @@ public class ConsoleInformationManager {
         return String.format("You %s! Congratulations, you can attack once more", getHitMessage());
     }
 
-    public static String getTurnMessage() {
-        String s = String.format("MATCH TURN: %s%s%s", AnsiColor.PURPLE, GameStatistics.getTotalTurns(), AnsiColor.RESET);
+    public static String getTurnMessage(String totalTurns) {
+        String s = String.format("MATCH TURN: %s%s%s", AnsiColor.PURPLE, totalTurns, AnsiColor.RESET);
         s = String.format("%31s", s);
         return String.format("%-31s", s);
     }
@@ -253,10 +257,17 @@ public class ConsoleInformationManager {
         System.out.printf("%sGame finished. %s win.%s\n\n", color, winnerName, AnsiColor.RESET);
     }
 
-    public static String getMatchStatus(boolean flag) {
+    public static String getPlayerMatchStatus(boolean flag) {
         AnsiColor color = flag ? AnsiColor.RED : AnsiColor.GREEN;
         String status = flag ? "LOST" : "WIN";
         return String.format("%s%s%s", color, status, AnsiColor.RESET);
+    }
+
+    public static void getMatchTimes(String matchStartTime, String matchEndTime, Duration duration) {
+        String startTime = String.format("Match start time: %s\n", matchStartTime);
+        String endTime = String.format("Match end time: %s\n", matchEndTime);
+        String elapsedTime = String.format("Total match time: %d hours, %d minutes\n", duration.toHours(), duration.toMinutes());
+        System.out.println(startTime + endTime + elapsedTime);
     }
 
     public static void printSessionClosure(String id, String message) {
@@ -273,5 +284,14 @@ public class ConsoleInformationManager {
 
     public static void printStatsMessage() {
         System.out.printf("%sStats of the Match%s\n\n", AnsiColor.YELLOW, AnsiColor.RESET);
+    }
+
+    public static void printEfficiency(long efficiency) {
+        System.out.printf("Efficiency: %d%%\n", efficiency);
+    }
+
+    public static void printPlayerStats(String playerName, boolean hasLost, String remainingShips) {
+        String ships = hasLost ? "no ships left" : remainingShips;
+        System.out.printf("Player: %s\nStatus: %s\nRemaining ships: %s\n", playerName, getPlayerMatchStatus(hasLost), ships);
     }
 }

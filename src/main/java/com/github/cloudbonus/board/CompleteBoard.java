@@ -91,6 +91,7 @@ public class CompleteBoard extends Board implements Observer {
         }
         return count;
     }
+
     @Override
     public String getRemainingShipsAfterGame() {
         Map<String, Integer> shipCounts = new TreeMap<>();
@@ -102,7 +103,9 @@ public class CompleteBoard extends Board implements Observer {
         }
 
         for (Map.Entry<String, Integer> entry : shipCounts.entrySet()) {
-            sb.append(entry.getKey()).append(" x").append(entry.getValue()).append(" ");
+            if (entry.getValue() > 0) {
+                sb.append(entry.getKey()).append(" x").append(entry.getValue()).append(" ");
+            }
         }
 
         return sb.toString();

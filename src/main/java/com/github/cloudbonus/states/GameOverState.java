@@ -1,6 +1,5 @@
 package com.github.cloudbonus.states;
 
-import com.github.cloudbonus.game.GameStatistics;
 import com.github.cloudbonus.server.BattleshipGameServerEndpoint;
 import com.github.cloudbonus.stateMachine.EnterState;
 import com.github.cloudbonus.stateMachine.StateMachine;
@@ -16,7 +15,6 @@ public class GameOverState implements EnterState {
     @Override
     public void enter() {
         resetUser();
-        GameStatistics.resetTurns();
         BattleshipGameServerEndpoint.resetServer();
         enterGameModeSelectionState();
     }

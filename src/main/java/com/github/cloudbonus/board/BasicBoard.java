@@ -80,8 +80,10 @@ public class BasicBoard extends Board {
         StringBuilder sb = new StringBuilder();
 
         for (Map.Entry<ShipType, Integer> entry : this.remainingShips.entrySet()) {
-            String shipIcon = CellType.SHIP.getSymbol();
-            sb.append(shipIcon.repeat(entry.getKey().getShipLength())).append(" x").append(entry.getValue()).append(" ");
+            if (entry.getValue() > 0) {
+                String shipIcon = CellType.SHIP.getSymbol();
+                sb.append(shipIcon.repeat(entry.getKey().getShipLength())).append(" x").append(entry.getValue()).append(" ");
+            }
         }
 
         return sb.toString();

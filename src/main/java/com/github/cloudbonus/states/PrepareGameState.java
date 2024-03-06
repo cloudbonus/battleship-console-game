@@ -5,7 +5,7 @@ import com.github.cloudbonus.board.CompleteBoard;
 import com.github.cloudbonus.stateMachine.*;
 import com.github.cloudbonus.user.User;
 import com.github.cloudbonus.user.HumanPlayerProvider;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 
 public class PrepareGameState implements EnterState{
@@ -16,7 +16,7 @@ public class PrepareGameState implements EnterState{
     private final StateMachine stateMachine;
     @Override
     public void enter(){
-        ConsoleInformationManager.printHeader();
+        ConsoleDisplayManager.printHeader();
         
         createUser();
         setupUser();

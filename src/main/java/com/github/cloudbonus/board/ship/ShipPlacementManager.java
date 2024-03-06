@@ -6,7 +6,7 @@ import com.github.cloudbonus.board.cell.Cell;
 import com.github.cloudbonus.board.cell.CellType;
 import com.github.cloudbonus.exceptions.InvalidShipPlacementException;
 import com.github.cloudbonus.util.CellConverter;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 import lombok.Setter;
 
@@ -21,7 +21,7 @@ public class ShipPlacementManager {
     private CompleteBoard board;
 
     public void setupShips(CompleteBoard board) {
-        ConsoleInformationManager.printShipPlacementSetup();
+        ConsoleDisplayManager.printShipPlacementSetup();
         this.setBoard(board);
 
         String selectedMode = UserInteractionManager.getABSelectionFromInput();
@@ -58,10 +58,10 @@ public class ShipPlacementManager {
     private void placeShipsManually() {
         for (ShipType shipType : ShipType.values()) {
             for (int i = 0; i < shipType.getNumShips(); i++) {
-                ConsoleInformationManager.printHeader();
+                ConsoleDisplayManager.printHeader();
                 int totalShipsPlacedOfThisType = this.board.getTotalShipsPlacedOfThisType(shipType);
                 int totalShipsPlaced = this.board.getShips().size();
-                ConsoleInformationManager.printPlacementMessage(shipType, totalShipsPlacedOfThisType, totalShipsPlaced);
+                ConsoleDisplayManager.printPlacementMessage(shipType, totalShipsPlacedOfThisType, totalShipsPlaced);
                 System.out.println(this.board.getState());
                 placeShipManually(shipType);
             }
@@ -117,14 +117,14 @@ public class ShipPlacementManager {
 
     private Cell getPositionFromUser() {
         UserInteractionManager.setPositionInterpreter();
-        ConsoleInformationManager.printPositionInputMessage();
+        ConsoleDisplayManager.printPositionInputMessage();
         String input = UserInteractionManager.createPositionFromInput();
         return CellConverter.createCellFromInput(input);
     }
 
     private boolean getOrientationFromUser() {
         UserInteractionManager.setOrientationInterpreter();
-        ConsoleInformationManager.printOrientationMenu();
+        ConsoleDisplayManager.printOrientationMenu();
         return UserInteractionManager.getShipOrientationFromInput();
     }
 

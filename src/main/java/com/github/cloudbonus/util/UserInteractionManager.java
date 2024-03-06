@@ -30,7 +30,7 @@ public class UserInteractionManager {
                 break;
             } else {
                 String message= "Input does not match the pattern. Try again: ";
-                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
+                System.out.printf("\n%s%s%s", ConsoleDisplayManager.AnsiColor.YELLOW, message, ConsoleDisplayManager.AnsiColor.RESET);
             }
         }
         System.out.println();
@@ -46,7 +46,7 @@ public class UserInteractionManager {
                 break;
             } else {
                 String message= "Input does not match the pattern. Try again: ";
-                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
+                System.out.printf("\n%s%s%s", ConsoleDisplayManager.AnsiColor.YELLOW, message, ConsoleDisplayManager.AnsiColor.RESET);
             }
         }
         return isVertical;
@@ -59,7 +59,7 @@ public class UserInteractionManager {
                 return input;
             } else {
                 String message= "Input does not match the pattern. Try again: ";
-                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
+                System.out.printf("\n%s%s%s", ConsoleDisplayManager.AnsiColor.YELLOW, message, ConsoleDisplayManager.AnsiColor.RESET);
             }
         }
     }
@@ -71,7 +71,7 @@ public class UserInteractionManager {
                 return Integer.parseInt(input);
             } else {
                 String message= "Input does not match the pattern. Try again: ";
-                System.out.printf("\n%s%s%s", ConsoleInformationManager.AnsiColor.YELLOW, message, ConsoleInformationManager.AnsiColor.RESET);
+                System.out.printf("\n%s%s%s", ConsoleDisplayManager.AnsiColor.YELLOW, message, ConsoleDisplayManager.AnsiColor.RESET);
             }
         }
     }

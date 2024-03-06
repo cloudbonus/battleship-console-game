@@ -3,7 +3,7 @@ package com.github.cloudbonus.states;
 import com.github.cloudbonus.stateMachine.*;
 import com.github.cloudbonus.user.HumanPlayerProvider;
 import com.github.cloudbonus.user.User;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import com.github.cloudbonus.util.UserInteractionManager;
 
 public class GameModeSelectionState implements EnterState {
@@ -22,7 +22,7 @@ public class GameModeSelectionState implements EnterState {
 
     private void printGameSetup(){
         User user = HumanPlayerProvider.getInstance();
-        ConsoleInformationManager.printGameSetup(user);
+        ConsoleDisplayManager.printGameSetup(user);
     }
 
     private void chooseGameMode() {

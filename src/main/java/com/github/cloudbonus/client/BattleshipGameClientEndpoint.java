@@ -3,7 +3,7 @@ package com.github.cloudbonus.client;
 import com.github.cloudbonus.board.cell.CellType;
 import com.github.cloudbonus.game.BattleController;
 import com.github.cloudbonus.game.GameStatistics;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import jakarta.websocket.*;
 import lombok.Setter;
 import org.glassfish.tyrus.client.ClientManager;
@@ -48,7 +48,7 @@ public class BattleshipGameClientEndpoint {
                 handleDefaultMessage(session);
             }
         } else {
-            ConsoleInformationManager.clearConsole();
+            ConsoleDisplayManager.clearConsole();
             System.out.println(message);
         }
     }
@@ -56,8 +56,8 @@ public class BattleshipGameClientEndpoint {
     private void handleLostMessage(String message, Session session) {
         GameStatistics.endGameTime();
         String reason = playerBattleController.processCellState(message);
-        ConsoleInformationManager.printMatchResult(false, playerBattleController.getOpponentName());
-        playerBattleController.toEndGame();
+        playerBattleController.printMatchResult();
+        playerBattleController.finishMatch();
         try {
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, reason));
         } catch (IOException e) {
@@ -86,14 +86,14 @@ public class BattleshipGameClientEndpoint {
 
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
-        boolean hasLost = playerBattleController.getUser().hasLost();
+        boolean hasLost = playerBattleController.hasLostMatch();
         if (hasLost) {
             GameStatistics.endGameTime();
-            ConsoleInformationManager.printMatchResult(true, playerBattleController.getOpponentName());
-            playerBattleController.toEndGame();
+            playerBattleController.printMatchResult();
+            playerBattleController.finishMatch();
         }
         GameStatistics.endGameTime();
-        ConsoleInformationManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
+        ConsoleDisplayManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
         latch.countDown();
     }
 

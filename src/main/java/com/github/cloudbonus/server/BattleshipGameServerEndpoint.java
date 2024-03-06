@@ -8,7 +8,7 @@ import java.util.Set;
 import com.github.cloudbonus.board.cell.CellType;
 import com.github.cloudbonus.game.BattleController;
 import com.github.cloudbonus.game.GameStatistics;
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import lombok.Setter;
@@ -50,10 +50,9 @@ public class BattleshipGameServerEndpoint {
                 handleDefaultMessage(session);
             }
 
-            String info = ConsoleInformationManager.printGameInfo(playerBattleController.getUser(), playerBattleController.getOpponentName());
-            info += ConsoleInformationManager.getWatchOnlyMessage();
             for (Session s : sessions) {
                 if (!(boolean) s.getUserProperties().get("canPlay")) {
+                    String info = playerBattleController.getGameInfoForSpectators();
                     s.getBasicRemote().sendText(info);
                 }
             }
@@ -69,8 +68,8 @@ public class BattleshipGameServerEndpoint {
     private void handleLostMessage(String message, Session session) {
         GameStatistics.endGameTime();
         String reason = playerBattleController.processCellState(message);
-        ConsoleInformationManager.printMatchResult(false, playerBattleController.getOpponentName());
-        playerBattleController.toEndGame();
+        playerBattleController.printMatchResult();
+        playerBattleController.finishMatch();
         try {
             session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, reason));
         } catch (IOException e) {
@@ -100,13 +99,13 @@ public class BattleshipGameServerEndpoint {
     @OnClose
     public void onClose(Session session, CloseReason closeReason) {
         boolean canPlay = (boolean) session.getUserProperties().get("canPlay");
-        boolean hasLost = playerBattleController.getUser().hasLost();
+        boolean hasLost = playerBattleController.hasLostMatch();
         if (hasLost && canPlay) {
             GameStatistics.endGameTime();
-            ConsoleInformationManager.printMatchResult(true, playerBattleController.getOpponentName());
-            playerBattleController.toEndGame();
+            playerBattleController.printMatchResult();
+            playerBattleController.finishMatch();
         }
-        ConsoleInformationManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
+        ConsoleDisplayManager.printSessionClosure(session.getId(), closeReason.getReasonPhrase());
         connectedClients--;
         isFinished = true;
     }

@@ -1,15 +1,15 @@
 package com.github.cloudbonus.board.cell;
 
-import com.github.cloudbonus.util.ConsoleInformationManager;
+import com.github.cloudbonus.util.ConsoleDisplayManager;
 import lombok.Getter;
 
 @Getter
 public enum CellType {
-    WATER(ConsoleInformationManager.AnsiColor.BLUE + "." + ConsoleInformationManager.AnsiColor.RESET),
+    WATER(ConsoleDisplayManager.AnsiColor.BLUE + "." + ConsoleDisplayManager.AnsiColor.RESET),
     MISS("×"),
-    SHIP(ConsoleInformationManager.AnsiColor.YELLOW + "☐" + ConsoleInformationManager.AnsiColor.RESET),
-    HIT(ConsoleInformationManager.AnsiColor.RED + "☒" + ConsoleInformationManager.AnsiColor.RESET),
-    SUNK(ConsoleInformationManager.AnsiColor.RED + "☒" + ConsoleInformationManager.AnsiColor.RESET);
+    SHIP(ConsoleDisplayManager.AnsiColor.YELLOW + "☐" + ConsoleDisplayManager.AnsiColor.RESET),
+    HIT(ConsoleDisplayManager.AnsiColor.RED + "☒" + ConsoleDisplayManager.AnsiColor.RESET),
+    SUNK(ConsoleDisplayManager.AnsiColor.RED + "☒" + ConsoleDisplayManager.AnsiColor.RESET);
 
 
     private final String symbol;
