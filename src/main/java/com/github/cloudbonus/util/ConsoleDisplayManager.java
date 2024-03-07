@@ -74,7 +74,7 @@ public class ConsoleDisplayManager {
     }
 
     public static void printPositionInputMessage() {
-        System.out.print("Please input the position (use only A-P for letters and 1-16 for numbers, e.g., A13): ");
+        System.out.print("\nPlease input the position (use only A-P for letters and 1-16 for numbers, e.g., A13): ");
     }
 
     public static void welcomeUser(String userName) {
@@ -287,7 +287,7 @@ public class ConsoleDisplayManager {
     }
 
     public static void printEfficiency(long efficiency) {
-        System.out.printf("Efficiency: %d%%\n", efficiency);
+        System.out.printf("Efficiency: %d%%\n\n", efficiency);
     }
 
     public static void printPlayerStats(String playerName, boolean hasLost, String remainingShips) {

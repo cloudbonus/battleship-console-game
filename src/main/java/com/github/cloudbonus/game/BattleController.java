@@ -73,7 +73,7 @@ public class BattleController {
         String info = getGameInfo();
         println(info);
         println(ConsoleDisplayManager.getPlayerTurnMessage());
-        ConsoleDisplayManager.printEmptyRows(4);
+        ConsoleDisplayManager.printEmptyRows(3);
         return executeAttack();
     }
 
@@ -110,6 +110,7 @@ public class BattleController {
 
     private String processSunkCell() {
         Ship lastDestroyedShip = this.user.getLeftBoard().getLastDestroyedShip();
+
         int shipSize = lastDestroyedShip.getShipType().getShipLength();
         String end = CellConverter.createInputFromCell(lastDestroyedShip.getPosition().get(shipSize - 1));
         String start = CellConverter.createInputFromCell(lastDestroyedShip.getPosition().get(0));
@@ -200,6 +201,7 @@ public class BattleController {
         gameStatistics.incrementPlayerHitShots();
 
         boolean triggerForAdditionalRows = true;
+
         if (message.startsWith("SUNK") || message.startsWith("LOST")) {
             ShipType shipType = ShipType.valueOf(message.split("/")[3]);
             int shipSize = shipType.getShipLength();
@@ -215,9 +217,9 @@ public class BattleController {
         println(ConsoleDisplayManager.getPlayerHitMessage());
 
         if (triggerForAdditionalRows){
-            ConsoleDisplayManager.printEmptyRows(3);
+            ConsoleDisplayManager.printEmptyRows(2);
         }
-        else ConsoleDisplayManager.printEmptyRows(2);
+        else ConsoleDisplayManager.printEmptyRows(1);
 
         if (disableConsoleOutput) {
             try {

@@ -55,5 +55,4 @@ public class Ship implements Observer, Subject {
     public void notifyObserver() {
         this.observer.update();
     }
-
 }
