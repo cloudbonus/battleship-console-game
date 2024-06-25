@@ -1,5 +1,6 @@
-package com.github.battleship.entity.board;
+package com.github.battleship.entity.board.impl;
 
+import com.github.battleship.entity.board.Board;
 import com.github.battleship.entity.board.cell.Cell;
 import com.github.battleship.entity.board.cell.CellType;
 import com.github.battleship.entity.board.ship.Ship;

@@ -1,7 +1,7 @@
 package com.github.battleship.entity.player.impl;
 
-import com.github.battleship.entity.board.BasicBoard;
-import com.github.battleship.entity.board.CompleteBoard;
+import com.github.battleship.entity.board.impl.BasicBoard;
+import com.github.battleship.entity.board.impl.CompleteBoard;
 import com.github.battleship.entity.board.cell.Cell;
 import com.github.battleship.entity.exception.CellAlreadyAttackedException;
 import com.github.battleship.entity.player.Human;
